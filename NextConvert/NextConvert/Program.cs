@@ -1,45 +1,99 @@
-﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
+﻿using NextConvert.Sources.Base;
+using NextConvert.Sources.Helpers;
+using NextConvert.Sources.Sprites;
+
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
-// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Runtime.CompilerServices;
 
-using (var image = new Image<Rgb24>(Configuration.Default, 32, 32))
+return CreateRootCommand().InvokeAsync(args).Result;
+
+#region Command line arguments
+
+FileInfo? CreateExistingFileTestParseArgument(ArgumentResult result)
 {
-	image.Mutate(x =>
+	if (result.Tokens.Count == 0)
 	{
-		x.Fill(Color.White, new RectangleF(0, 0, 32, 32));
+		result.ErrorMessage = "Input file name is required!";
+		return null;
+	}
 
-		x.DrawLines(new Pen(Color.Red, 1), new PointF[] { new PointF(0, 10), new PointF(10, 10) });
+	var filename = result.Tokens.First().Value;
 
-		x.Fill(Color.RebeccaPurple, new RectangleF(0, 0, 1, 1));
-		x.Fill(Color.RebeccaPurple, new RectangleF(0, 1, 1, 1));
-		x.Fill(Color.RebeccaPurple, new RectangleF(0, 2, 1, 1));
-	});
+	if (!File.Exists(filename))
+	{
+		result.ErrorMessage = $"{filename} doesn't exist!";
+		return null;
+	}
 
-	image.SaveAsBmp("result.bmp");
+	return new FileInfo(filename);
 }
 
-using (var image = Image.Load<Rgb24>("result.bmp"))
+Command CreateSpritesCommand()
 {
-	Console.WriteLine($"w={image.Width} h={image.Height}");
+	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument);
+	var spritesOptions = new Option<FileInfo?>(name: "--sprites", description: "Output raw sprites file [optional]");
+	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
+	var spritesheetOption = new Option<FileInfo?>(name: "--spritesheet", description: "Generate sprite sheet image [bmp, png]");
+	var transparentOption = new Option<string?>(name: "--transparent", description: "Transparent colour [optional for transparent png]");
+	var spritesPerRowOption = new Option<int>(name: "--per-row", description: "Number of sprites per row", getDefaultValue: () => 16);
 
-	image.ProcessPixelRows(accessor =>
+	var result = new Command("sprites", "Converts sprites source image")
 	{
-		for (int y = 0; y < accessor.Height; y++) {
-			Span<Rgb24> row = accessor.GetRowSpan(y);
+		inputOption, 
+		spritesOptions, 
+		paletteOption, 
+		spritesheetOption,
+		transparentOption,
+		spritesPerRowOption,
+	};
 
-			for (int x = 0; x < row.Length; x++)
-			{
-				ref Rgb24 pixel = ref row[x];
+	result.SetHandler((input, sprites, palette, spritesheet, transparent, perRow) =>
+	{
+		// Run sprites runner.
+		Run(() => new SpriteRunner
+		{
+			Input = input,
+			Sprites = sprites,
+			Palette = palette,
+			SpriteSheet = spritesheet,
+			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
+			SpritesPerRow = perRow,
+		});
+	},
+	inputOption,
+	spritesOptions,
+	paletteOption,
+	spritesheetOption,
+	transparentOption,
+	spritesPerRowOption);
 
-				if (x == 0)
-				{
-					Console.WriteLine($"({x},{y}): r={pixel.R} g={pixel.G} b={pixel.B}");
-				}
-			}
-		}
-	});
+	return result;
 }
+
+Command CreateRootCommand()
+{
+	var result = new RootCommand("Converter for ZX Spectrum Next cross-development formats.");
+
+	result.AddCommand(CreateSpritesCommand());
+
+	return result;
+}
+
+void Run(Func<BaseRunner> creator)
+{
+	// The purpose of this function is to catch all creation exception as well as runtime ones.
+	try
+	{
+		creator().Run();
+	}
+	catch (Exception e)
+	{
+		Log.Error(e.Message);
+	}
+}
+
+#endregion

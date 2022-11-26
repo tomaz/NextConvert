@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "NextConvert": {
+      "commandName": "Project",
+      "commandLineArgs": "sprites\r\n--input c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.bmp\r\n--sprites c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.spr\r\n--palette c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.pal\r\n--spritesheet c:\\Users\\tkrag\\Downloads\\export\\descend\\spritesheet.bmp\r\n--transparent #FF00FF\r\n--per-row 5"
+    }
+  }
+}
