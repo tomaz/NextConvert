@@ -33,23 +33,25 @@ FileInfo? CreateExistingFileTestParseArgument(ArgumentResult result)
 Command CreateSpritesCommand()
 {
 	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument);
+	var transparentOption = new Option<string?>(name: "--transparent", description: "Transparent colour [optional for transparent png]");
 	var spritesOptions = new Option<FileInfo?>(name: "--sprites", description: "Output raw sprites file [optional]");
 	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
-	var spritesheetOption = new Option<FileInfo?>(name: "--spritesheet", description: "Generate sprite sheet image [bmp, png]");
-	var transparentOption = new Option<string?>(name: "--transparent", description: "Transparent colour [optional for transparent png]");
+	var sheetOption = new Option<FileInfo?>(name: "--sheet", description: "Generate sprite sheet image [bmp, png]");
+	var sheetBackgroundOption = new Option<string?>(name: "--sheet-colour", description: "Sheet image background colour [optional]");
 	var spritesPerRowOption = new Option<int>(name: "--columns", description: "Number of sprite columns for spritesheet", getDefaultValue: () => 16);
 
 	var result = new Command("sprites", "Converts sprites source image")
 	{
-		inputOption, 
+		inputOption,
+		transparentOption,
 		spritesOptions, 
 		paletteOption, 
-		spritesheetOption,
-		transparentOption,
+		sheetOption,
+		sheetBackgroundOption,
 		spritesPerRowOption,
 	};
 
-	result.SetHandler((input, sprites, palette, spritesheet, transparent, perRow) =>
+	result.SetHandler((input, transparent, sprites, palette, sheet, sheetBackground, perRow) =>
 	{
 		// Run sprites runner.
 		Run(() => new SpriteRunner
@@ -57,16 +59,18 @@ Command CreateSpritesCommand()
 			InputFilename = input,
 			OutputSpritesFilename = sprites,
 			PaletteFilename = palette,
-			SpriteSheetFilename = spritesheet,
+			InfoSheetFilename = sheet,
+			InfoSheetBackgroundColour = sheetBackground?.ToColor(),
 			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
 			SpritesPerRow = perRow,
 		});
 	},
 	inputOption,
+	transparentOption,
 	spritesOptions,
 	paletteOption,
-	spritesheetOption,
-	transparentOption,
+	sheetOption,
+	sheetBackgroundOption,
 	spritesPerRowOption);
 
 	return result;

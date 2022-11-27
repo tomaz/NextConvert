@@ -8,6 +8,7 @@ namespace NextConvert.Sources.ImageUtils;
 /// </summary>
 public class PaletteMapper
 {
+	private Argb32 TransparentColour { get; set; }
 	private bool IsImage4Bit { get; set; }
 
 	#region Initialization & Disposal
@@ -21,8 +22,10 @@ public class PaletteMapper
 
 	#region Public
 
-	public IndexedData Map(IEnumerable<Image<Argb32>> images)
+	public IndexedData Map(IEnumerable<Image<Argb32>> images, Argb32 transparentColour)
 	{
+		TransparentColour = transparentColour;
+
 		var result = IsImage4Bit ? Colours4Bit(images) : Colours8Bit(images);
 
 		Validate(result);
@@ -52,7 +55,8 @@ public class PaletteMapper
 
 					for (int x = 0; x < row.Length; x++)
 					{
-						var index = (byte)result.AddIfDistinct(row[x]);
+						ref Argb32 colour = ref row[x];
+						var index = (byte)result.AddIfDistinct(colour, colour == TransparentColour);
 
 						indexedImage[x, y] = index;
 					}

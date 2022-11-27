@@ -24,12 +24,12 @@ public class IndexedData
 	/// <summary>
 	/// Adds the given color to the end of the list if it's not present in the list yet.
 	/// </summary>
-	public int AddIfDistinct(Argb32 colour)
+	public int AddIfDistinct(Argb32 colour, bool isTransparent)
 	{
 		var index = Palette.FindIndex(c => c.AsArgb32 == colour);
 		if (index >= 0) return index;
 		
-		Palette.Add(new Colour(colour));
+		Palette.Add(new Colour(colour, isTransparent));
 
 		return Palette.Count - 1;
 	}
@@ -40,15 +40,18 @@ public class IndexedData
 
 	public class Colour
 	{
+		public bool IsTransparent { get; set; }
+
 		public Argb32 AsArgb32 { get; set; }
 		public byte As8BitColour { get; private set; }
 		public byte[] As9BitColour { get; private set; }
 
-		public Colour(Argb32 argb)
+		public Colour(Argb32 argb, bool isTransparent = false)
 		{
+			IsTransparent = isTransparent;
 			AsArgb32 = argb;
 			As8BitColour = argb.As8BitColour();
-			As9BitColour= argb.As9BitColour();
+			As9BitColour = argb.As9BitColour();
 		}
 	}
 

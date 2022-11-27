@@ -6,6 +6,28 @@ namespace NextConvert.Sources.Helpers;
 public static class ColorExtensions
 {
 	/// <summary>
+	/// Determines if the colour is dark (result is true) or light (result is false).
+	/// </summary>
+	public static bool IsDark(this Argb32 color)
+	{
+		var r = (double)color.R;
+		var g = (double)color.G;
+		var b = (double)color.B;
+
+		var brightness = Math.Sqrt(0.299 * r * r + 0.587 * g * g + 0.114 * b * b);
+
+		return brightness < 127.5;
+	}
+
+	/// <summary>
+	/// Converts the given colour to semi-transparent using the given alpha.
+	/// </summary>
+	public static Argb32 WithAlpha(this Argb32 colour, byte alpha)
+	{
+		return new Argb32(colour.R, colour.G, colour.B, alpha);
+	}
+
+	/// <summary>
 	/// Converts the given string to color.
 	/// </summary>
 	public static Color? ToColor(this string raw)

@@ -17,8 +17,6 @@ public class SpriteRunner : BaseRunner
 	public FileInfo? InputFilename { get; set; }
 	public FileInfo? OutputSpritesFilename { get; set; }
 	public FileInfo? PaletteFilename { get; set; }
-	public FileInfo? SpriteSheetFilename { get; set; }
-	public Argb32? TransparentColor { get; set; }
 	public int SpritesPerRow { get; set; }
 	public bool IsSprite4Bit { get; set; } = false;
 	public bool IsPalette9Bit { get; set; } = true;
@@ -38,14 +36,15 @@ public class SpriteRunner : BaseRunner
 		Log.Verbose("Will generate:");
 		if (OutputSpritesFilename != null) Log.Verbose($"{OutputSpritesFilename}");
 		if (PaletteFilename != null) Log.Verbose($"{PaletteFilename}");
-		if (SpriteSheetFilename != null) Log.Verbose($"{SpriteSheetFilename}");
+		if (InfoSheetFilename != null) Log.Verbose($"{InfoSheetFilename}");
 		
 		Log.NewLine();
 		Log.Verbose("Options:");
 		Log.Verbose($"Sprite type: {(IsSprite4Bit ? 4 : 8)}bit");
 		Log.Verbose($"Bits per colour: {(IsPalette9Bit ? 9 : 8)}");
-		Log.Verbose($"Transparent colour: {TransparentColor} (RGBA)");
-		Log.Verbose($"Spritesheet columns: {SpritesPerRow}");
+		Log.Verbose($"Transparent colour: {TransparentColor} (ARGB)");
+		Log.Verbose($"Sheet background: {InfoSheetBackgroundColour} (ARGB)");
+		Log.Verbose($"Sheet sprite columns: {SpritesPerRow}");
 		
 		Log.NewLine();
 	}
@@ -74,7 +73,7 @@ public class SpriteRunner : BaseRunner
 		Log.Info($"{sprites.Count} sprites detected");
 
 		Log.Verbose("Mapping colours");
-		var data = new PaletteMapper(IsSprite4Bit).Map(sprites);
+		var data = new PaletteMapper(IsSprite4Bit).Map(sprites, TransparentColor!.Value);
 		Log.Info($"{data.Palette.Count} colours mapped");
 
 		if (OutputSpritesFilename != null)
@@ -108,7 +107,7 @@ public class SpriteRunner : BaseRunner
 			Log.Info($"Exported {PaletteFilename}");
 		}
 
-		if (SpriteSheetFilename != null)
+		if (InfoSheetFilename != null)
 		{
 			Log.NewLine();
 			Log.Verbose("Exporting spritesheet");
@@ -116,7 +115,7 @@ public class SpriteRunner : BaseRunner
 			new SheetExporter
 			{
 				Data = data,
-				TransparentColour = TransparentColor ?? Color.Transparent,
+				BackgroundColour = InfoSheetBackgroundColour!.Value,
 
 				ItemWidth = SpriteWidth,
 				ItemHeight = SpriteHeight,
@@ -126,9 +125,9 @@ public class SpriteRunner : BaseRunner
 				IsPalette9Bit = IsPalette9Bit,
 				Is4BitColour = IsSprite4Bit
 			}
-			.Export(SpriteSheetFilename);
+			.Export(InfoSheetFilename);
 
-			Log.Info($"Exported {SpriteSheetFilename}");
+			Log.Info($"Exported {InfoSheetFilename}");
 		}
 	}
 

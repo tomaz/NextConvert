@@ -1,5 +1,7 @@
 ﻿using NextConvert.Sources.Helpers;
 
+using SixLabors.ImageSharp.PixelFormats;
+
 using System.Diagnostics;
 using System.Runtime.Serialization;
 
@@ -10,6 +12,10 @@ namespace NextConvert.Sources.Base;
 /// </summary>
 public abstract class BaseRunner
 {
+	public FileInfo? InfoSheetFilename { get; set; }
+	public Argb32? InfoSheetBackgroundColour { get; set; }
+	public Argb32? TransparentColor { get; set; }
+
 	#region Public
 
 	/// <summary>
@@ -18,6 +24,8 @@ public abstract class BaseRunner
 	public void Run()
 	{
 		var watch = Stopwatch.StartNew();
+
+		if (InfoSheetBackgroundColour == null) InfoSheetBackgroundColour = TransparentColor;
 
 		OnDescribe();
 		OnValidate();
