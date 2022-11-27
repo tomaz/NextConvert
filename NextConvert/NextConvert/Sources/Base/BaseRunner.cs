@@ -12,6 +12,7 @@ namespace NextConvert.Sources.Base;
 /// </summary>
 public abstract class BaseRunner
 {
+	public int InfoSheetScale { get; set; } = 1;
 	public FileInfo? InfoSheetFilename { get; set; }
 	public Argb32? InfoSheetBackgroundColour { get; set; }
 	public Argb32? TransparentColor { get; set; }

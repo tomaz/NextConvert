@@ -25,6 +25,8 @@ public class SheetExporter
 	public IndexedData? Data { get; set; }
 	public Argb32 BackgroundColour { get; set; } = Color.Transparent;
 
+	public int Scale { get; set; } = 1;
+
 	public bool IsPaletteCountExported { get; set; } = true;
 	public bool IsPalette9Bit { get; set; } = true;
 	public bool Is4BitColour { get; set; } = false;
@@ -85,7 +87,7 @@ public class SheetExporter
 
 	#region Private properties
 
-	private FontRenderer FontRenderer { get; set; } = new();
+	private FontRenderer FontRenderer { get; set; }
 
 	private Argb32 BorderColour { get; set; }
 	private Argb32 IdentifierColour { get; set; }
@@ -107,8 +109,10 @@ public class SheetExporter
 	{
 		if (Data == null) throw new InvalidDataException("Data is required, make sure property is assigned");
 
-		var imageWidth = CalculateImageWidth();
-		var imageHeight = CalculateImageHeight();
+		FontRenderer = new(Scale);
+
+		var imageWidth = Scaled(CalculateImageWidth());
+		var imageHeight = Scaled(CalculateImageHeight());
 
 		PrepareColours();
 
@@ -141,28 +145,28 @@ public class SheetExporter
 		void DrawBorder()
 		{
 			context.Draw(BorderColour, 1, new RectangleF(
-				x: x,
-				y: y,
-				width: ItemWidth + ItemSpacing,
-				height: HeaderHeight + ItemHeight + ItemSpacing));
+				x: Scaled(x),
+				y: Scaled(y),
+				width: Scaled(ItemWidth + ItemSpacing),
+				height: Scaled(HeaderHeight + ItemHeight + ItemSpacing)));
 		}
 
 		void DrawIdentifier(int index)
 		{
 			// Fill in the background behind index text.
 			context.Fill(IdentifierBackgroundColour, new RectangleF(
-				x: x + 1,
-				y: y + 1,
-				width: ItemWidth,
-				height: HeaderHeight));
+				x: Scaled(x + 1),
+				y: Scaled(y + 1),
+				width: Scaled(ItemWidth),
+				height: Scaled(HeaderHeight)));
 
 			// Render image index.
 			FontRenderer.DrawText(
 				context: context, 
 				text: index.ToString(), 
 				color: IdentifierColour, 
-				x: x + 2, 
-				y: y + 1);
+				x: Scaled(x + 2), 
+				y: Scaled(y + 1));
 		}
 
 		void DrawImage(IndexedImage image)
@@ -175,9 +179,11 @@ public class SheetExporter
 					var colourIndex = image[ix, iy];
 					var colour = Data!.Palette[colourIndex];
 
-					context.SetPixel(colour.AsArgb32,
-						x + ix + 1,
-						y + iy + HeaderHeight + 1);
+					context.Fill(colour.AsArgb32, new RectangleF(
+						x: Scaled(x + ix + 1),
+						y: Scaled(y + iy + HeaderHeight + 1),
+						width: Scaled(1),
+						height: Scaled(1)));
 				}
 			}
 		}
@@ -216,43 +222,43 @@ public class SheetExporter
 		void DrawBorder()
 		{
 			context.Draw(BorderColour, 1, new RectangleF(
-				x: x,
-				y: y,
-				width: ColourWidth + ColourSpacing,
-				height: HeaderHeight + ColourHeight + ColourSpacing));
+				x: Scaled(x),
+				y: Scaled(y),
+				width: Scaled(ColourWidth + ColourSpacing),
+				height: Scaled(HeaderHeight + ColourHeight + ColourSpacing)));
 		}
 
 		void DrawIdentifier(int index)
 		{
 			// Fill in the background behind index text.
 			context.Fill(IdentifierBackgroundColour, new RectangleF(
-				x: x + 1,
-				y: y + 1,
-				width: ColourWidth,
-				height: HeaderHeight));
+				x: Scaled(x + 1),
+				y: Scaled(y + 1),
+				width: Scaled(ColourWidth),
+				height: Scaled(HeaderHeight)));
 
 			// Render colour index.
 			FontRenderer.DrawText(
 				context: context,
 				text: index.ToString(),
 				color: IdentifierColour,
-				x: x + 2,
-				y: y + 1);
+				x: Scaled(x + 2),
+				y: Scaled(y + 1));
 		}
 
 		void DrawColour(IndexedData.Colour colour)
 		{
 			context.Fill(colour.AsArgb32, new RectangleF(
-				x: x + 1,
-				y: HeaderHeight + y + 1,
-				width: ColourWidth,
-				height: ColourHeight));
+				x: Scaled(x + 1),
+				y: Scaled(HeaderHeight + y + 1),
+				width: Scaled(ColourWidth),
+				height: Scaled(ColourHeight)));
 
 			if (colour.IsTransparent)
 			{
-				var centerX = x + ColourWidth / 2;
-				var centerY = y + HeaderHeight + ColourHeight / 2 + 1;
-				var offset = ColourHeight / 5;
+				var centerX = Scaled(x + ColourWidth / 2);
+				var centerY = Scaled(y + HeaderHeight + ColourHeight / 2 + 1);
+				var offset = Scaled(ColourHeight / 5);
 
 				context.DrawLines(
 					color: BorderColour,
@@ -276,8 +282,9 @@ public class SheetExporter
 		{
 			if (!ColourShowValue) return;
 
+			// Note: again, since font sizes are automatically adjusted to compensate for scale, we need to invert that before using in other size calculations.
 			var left = x + ColourWidth + ColourSpacing * 2 + 2;
-			var top = y + HeaderHeight + (ColourHeight - (int)ColourByteSize.Height) / 2;
+			var top = y + HeaderHeight + (ColourHeight - (int)ColourByteSize.Height / Scale) / 2;
 
 			if (IsPalette9Bit)
 			{
@@ -287,15 +294,15 @@ public class SheetExporter
 					context: context,
 					text: values[0].ToString("X2"),
 					color: BorderColour,
-					x: left,
-					y: top);
+					x: Scaled(left),
+					y: Scaled(top));
 
 				FontRenderer.DrawText(
 					context: context,
 					text: values[1].ToString("X2"),
 					color: BorderColour,
-					x: left + (int)ColourByteSize.Width + ColourSpacing * 2,
-					y: top);
+					x: Scaled(left + ColourSpacing * 2) + (int)ColourByteSize.Width,	// note: measures text size should not be scaled since we're adopting with font size
+					y: Scaled(top));
 			}
 			else
 			{
@@ -303,8 +310,8 @@ public class SheetExporter
 					context: context,
 					text: colour.As8BitColour.ToString("X2"),
 					color: BorderColour,
-					x: left,
-					y: top);
+					x: Scaled(left),
+					y: Scaled(top));
 			}
 		}
 
@@ -346,12 +353,13 @@ public class SheetExporter
 	{
 		int HexValueTextWidth()
 		{
+			// Note: font sizes are automatically adjusted for scale, so we need to compensate when calculating!
 			if (!ColourShowValue) return 0;
 
 			ColourByteSize = FontRenderer.MeasureText("88");
 			if (ColourByteSize == Size.Empty) return 0;
 
-			var byteWidth = ColourByteSize.Width;
+			var byteWidth = ColourByteSize.Width / Scale;
 			var textWidth = IsPalette9Bit ? byteWidth * 2 + ColourSpacing * 2 : byteWidth;
 			return textWidth + ColourSpacing * 8;
 		}
@@ -384,6 +392,11 @@ public class SheetExporter
 		var paletteHeight = paletteRowHeight * paletteRows;
 
 		return Math.Max(itemsHeight, paletteHeight) + Spacing * 2;
+	}
+
+	private int Scaled(int value)
+	{
+		return value * Scale;
 	}
 
 	#endregion

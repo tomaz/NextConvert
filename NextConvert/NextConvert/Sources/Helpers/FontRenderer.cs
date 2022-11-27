@@ -20,7 +20,7 @@ public class FontRenderer
 
 	#region Initialization & Disposal
 
-	public FontRenderer()
+	public FontRenderer(int scale)
 	{
 		var filename = "font.ttf";
 
@@ -30,7 +30,7 @@ public class FontRenderer
 		var collection = new FontCollection();
 		var family = collection.Add(filename);
 
-		Font = family.CreateFont(9);
+		Font = family.CreateFont(9 * scale);
 		Options = new TextOptions(Font);
 		Enabled = true;
 	}

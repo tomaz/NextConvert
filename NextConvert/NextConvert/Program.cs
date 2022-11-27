@@ -38,6 +38,7 @@ Command CreateSpritesCommand()
 	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
 	var sheetOption = new Option<FileInfo?>(name: "--sheet", description: "Generate sprite sheet image [bmp, png]");
 	var sheetBackgroundOption = new Option<string?>(name: "--sheet-colour", description: "Sheet image background colour [optional]");
+	var sheetScaleOption = new Option<int?>(name: "--sheet-scale", description: "Sheet image scale (1, 2, 3 etc) [optional]");
 	var spritesPerRowOption = new Option<int>(name: "--columns", description: "Number of sprite columns for spritesheet", getDefaultValue: () => 16);
 
 	var result = new Command("sprites", "Converts sprites source image")
@@ -47,11 +48,12 @@ Command CreateSpritesCommand()
 		spritesOptions, 
 		paletteOption, 
 		sheetOption,
+		sheetScaleOption,
 		sheetBackgroundOption,
 		spritesPerRowOption,
 	};
 
-	result.SetHandler((input, transparent, sprites, palette, sheet, sheetBackground, perRow) =>
+	result.SetHandler((input, transparent, sprites, palette, sheet, sheetScale, sheetBackground, perRow) =>
 	{
 		// Run sprites runner.
 		Run(() => new SpriteRunner
@@ -60,6 +62,7 @@ Command CreateSpritesCommand()
 			OutputSpritesFilename = sprites,
 			PaletteFilename = palette,
 			InfoSheetFilename = sheet,
+			InfoSheetScale = sheetScale ?? 1,
 			InfoSheetBackgroundColour = sheetBackground?.ToColor(),
 			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
 			SpritesPerRow = perRow,
@@ -70,6 +73,7 @@ Command CreateSpritesCommand()
 	spritesOptions,
 	paletteOption,
 	sheetOption,
+	sheetScaleOption,
 	sheetBackgroundOption,
 	spritesPerRowOption);
 

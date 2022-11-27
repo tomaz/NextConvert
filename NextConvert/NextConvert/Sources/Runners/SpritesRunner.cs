@@ -44,6 +44,7 @@ public class SpriteRunner : BaseRunner
 		Log.Verbose($"Bits per colour: {(IsPalette9Bit ? 9 : 8)}");
 		Log.Verbose($"Transparent colour: {TransparentColor} (ARGB)");
 		Log.Verbose($"Sheet background: {InfoSheetBackgroundColour} (ARGB)");
+		Log.Verbose($"Sheet scale: {InfoSheetScale}x");
 		Log.Verbose($"Sheet sprite columns: {SpritesPerRow}");
 		
 		Log.NewLine();
@@ -115,7 +116,9 @@ public class SpriteRunner : BaseRunner
 			new SheetExporter
 			{
 				Data = data,
+
 				BackgroundColour = InfoSheetBackgroundColour!.Value,
+				Scale = InfoSheetScale,
 
 				ItemWidth = SpriteWidth,
 				ItemHeight = SpriteHeight,
