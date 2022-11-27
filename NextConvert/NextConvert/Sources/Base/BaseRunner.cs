@@ -12,34 +12,10 @@ namespace NextConvert.Sources.Base;
 /// </summary>
 public abstract class BaseRunner
 {
-	public int InfoSheetScale { get; set; } = 1;
-	public FileInfo? InfoSheetFilename { get; set; }
-	public Argb32? InfoSheetBackgroundColour { get; set; }
+	public GlobalOptionsBinder.GlobalOptions Globals { get; set; }
 	public Argb32? TransparentColor { get; set; }
 
-	#region Public
-
-	/// <summary>
-	/// Invokes the runner.
-	/// </summary>
-	public void Run()
-	{
-		var watch = Stopwatch.StartNew();
-
-		if (InfoSheetBackgroundColour == null) InfoSheetBackgroundColour = TransparentColor;
-
-		OnDescribe();
-		OnValidate();
-		OnRun();
-
-		watch.Stop();
-
-		Log.Info($"{watch.ElapsedMilliseconds}ms");
-	}
-
-	#endregion
-
-	#region Overrides
+	#region Subclass
 
 	/// <summary>
 	/// Called before validation; subclass should describe the parameters.
@@ -58,6 +34,49 @@ public abstract class BaseRunner
 	/// Runs the converter.
 	/// </summary>
 	protected abstract void OnRun();
+
+	#endregion
+
+	#region Public
+
+	/// <summary>
+	/// Invokes the runner.
+	/// </summary>
+	public void Run()
+	{
+		var watch = Stopwatch.StartNew();
+
+		if (Globals.SheetBackgroundColour == null) Globals.SheetBackgroundColour = TransparentColor;
+
+		OnDescribe();
+		OnValidate();
+		OnRun();
+
+		watch.Stop();
+
+		Log.Info($"{watch.ElapsedMilliseconds}ms");
+	}
+
+	#endregion
+
+	#region Helpers
+
+	protected void DescribeGlobals()
+	{
+		Log.Verbose($"Bits per colour: {(Globals.Palette9Bit ? 9 : 8)}");
+		Log.Verbose($"Export palette count: {Globals.ExportPaletteCount}");
+		Log.Verbose($"Keep original positions: {Globals.KeepOriginalPositions}");
+
+		if (Globals.SheetFilename != null)
+		{
+			Log.NewLine();
+			Log.Verbose("Sheet options:");
+			Log.Verbose($"Background colour: {Globals.SheetBackgroundColour} (ARGB)");
+			Log.Verbose($"Sprite columns: {Globals.SheetImagesPerRow}");
+			Log.Verbose($"Colour columns: {Globals.SheetColoursPerRow}");
+			Log.Verbose($"Scale: {Globals.SheetScale}x");
+		}
+	}
 
 	#endregion
 }

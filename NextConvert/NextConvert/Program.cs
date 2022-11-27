@@ -5,6 +5,8 @@ using NextConvert.Sources.Runners;
 using SixLabors.ImageSharp;
 
 using System.CommandLine;
+using System.CommandLine.Binding;
+using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 
 return CreateRootCommand().InvokeAsync(args).Result;
@@ -32,50 +34,36 @@ FileInfo? CreateExistingFileTestParseArgument(ArgumentResult result)
 
 Command CreateSpritesCommand()
 {
-	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument);
+	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument) { IsRequired = true };
 	var transparentOption = new Option<string?>(name: "--transparent", description: "Transparent colour [optional for transparent png]");
 	var spritesOptions = new Option<FileInfo?>(name: "--sprites", description: "Output raw sprites file [optional]");
 	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
-	var sheetOption = new Option<FileInfo?>(name: "--sheet", description: "Generate sprite sheet image [bmp, png]");
-	var sheetBackgroundOption = new Option<string?>(name: "--sheet-colour", description: "Sheet image background colour [optional]");
-	var sheetScaleOption = new Option<int?>(name: "--sheet-scale", description: "Sheet image scale (1, 2, 3 etc) [optional]");
-	var spritesPerRowOption = new Option<int>(name: "--columns", description: "Number of sprite columns for spritesheet", getDefaultValue: () => 16);
 
 	var result = new Command("sprites", "Converts sprites source image")
 	{
 		inputOption,
 		transparentOption,
-		spritesOptions, 
-		paletteOption, 
-		sheetOption,
-		sheetScaleOption,
-		sheetBackgroundOption,
-		spritesPerRowOption,
+		spritesOptions,
+		paletteOption
 	};
 
-	result.SetHandler((input, transparent, sprites, palette, sheet, sheetScale, sheetBackground, perRow) =>
+	result.SetHandler((input, transparent, sprites, palette, globalOptions) =>
 	{
 		// Run sprites runner.
 		Run(() => new SpriteRunner
 		{
+			Globals = (GlobalOptionsBinder.GlobalOptions)globalOptions,
 			InputFilename = input,
+			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
 			OutputSpritesFilename = sprites,
 			PaletteFilename = palette,
-			InfoSheetFilename = sheet,
-			InfoSheetScale = sheetScale ?? 1,
-			InfoSheetBackgroundColour = sheetBackground?.ToColor(),
-			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
-			SpritesPerRow = perRow,
 		});
 	},
 	inputOption,
 	transparentOption,
 	spritesOptions,
 	paletteOption,
-	sheetOption,
-	sheetScaleOption,
-	sheetBackgroundOption,
-	spritesPerRowOption);
+	new GlobalOptionsBinder());
 
 	return result;
 }
@@ -83,6 +71,16 @@ Command CreateSpritesCommand()
 Command CreateRootCommand()
 {
 	var result = new RootCommand("Converter for ZX Spectrum Next cross-development formats.");
+
+	result.AddGlobalOption(GlobalOptionsBinder.SheetFilenameOption);
+	result.AddGlobalOption(GlobalOptionsBinder.SheetBackgroundOption);
+	result.AddGlobalOption(GlobalOptionsBinder.SheetImagesPerRowOption);
+	result.AddGlobalOption(GlobalOptionsBinder.SheetColoursPerRowOption);
+	result.AddGlobalOption(GlobalOptionsBinder.SheetScaleOption);
+
+	result.AddGlobalOption(GlobalOptionsBinder.Palette9BitOption);
+	result.AddGlobalOption(GlobalOptionsBinder.ExportPaletteCountOption);
+	result.AddGlobalOption(GlobalOptionsBinder.KeepOriginalPositionsOption);
 
 	result.AddCommand(CreateSpritesCommand());
 

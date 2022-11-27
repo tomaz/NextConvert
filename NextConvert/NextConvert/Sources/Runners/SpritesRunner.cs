@@ -17,10 +17,7 @@ public class SpriteRunner : BaseRunner
 	public FileInfo? InputFilename { get; set; }
 	public FileInfo? OutputSpritesFilename { get; set; }
 	public FileInfo? PaletteFilename { get; set; }
-	public int SpritesPerRow { get; set; }
-	public bool IsSprite4Bit { get; set; } = false;
-	public bool IsPalette9Bit { get; set; } = true;
-	public bool IsPaletteCountExported { get; set; } = true;
+	public bool IsSprite4Bit { get; set; } = false;		// not possible to change right now, but we use this option in several places, so keeping it as placeholder
 
 	#region Overrides
 
@@ -36,17 +33,14 @@ public class SpriteRunner : BaseRunner
 		Log.Verbose("Will generate:");
 		if (OutputSpritesFilename != null) Log.Verbose($"{OutputSpritesFilename}");
 		if (PaletteFilename != null) Log.Verbose($"{PaletteFilename}");
-		if (InfoSheetFilename != null) Log.Verbose($"{InfoSheetFilename}");
+		if (Globals.SheetFilename != null) Log.Verbose($"{Globals.SheetFilename}");
 		
 		Log.NewLine();
 		Log.Verbose("Options:");
-		Log.Verbose($"Sprite type: {(IsSprite4Bit ? 4 : 8)}bit");
-		Log.Verbose($"Bits per colour: {(IsPalette9Bit ? 9 : 8)}");
 		Log.Verbose($"Transparent colour: {TransparentColor} (ARGB)");
-		Log.Verbose($"Sheet background: {InfoSheetBackgroundColour} (ARGB)");
-		Log.Verbose($"Sheet scale: {InfoSheetScale}x");
-		Log.Verbose($"Sheet sprite columns: {SpritesPerRow}");
-		
+
+		DescribeGlobals();
+
 		Log.NewLine();
 	}
 
@@ -70,7 +64,7 @@ public class SpriteRunner : BaseRunner
 	protected override void OnRun()
 	{
 		Log.Verbose("Parsing sprites");
-		var sprites = new ImageSplitter(SpriteWidth, SpriteHeight).Images(InputFilename!.FullName, TransparentColor!.Value);
+		var sprites = new ImageSplitter(SpriteWidth, SpriteHeight, Globals.KeepOriginalPositions).Images(InputFilename!.FullName, TransparentColor!.Value);
 		Log.Info($"{sprites.Count} sprites detected");
 
 		Log.Verbose("Mapping colours");
@@ -85,7 +79,7 @@ public class SpriteRunner : BaseRunner
 			new ImageExporter
 			{
 				Data = data,
-				Is4BitColour = IsSprite4Bit
+				Is4BitColour = IsSprite4Bit,
 			}
 			.Export(OutputSpritesFilename);
 
@@ -100,15 +94,15 @@ public class SpriteRunner : BaseRunner
 			new PaletteExporter
 			{
 				Data = data,
-				IsPalette9Bit = IsPalette9Bit,
-				IsPaletteCountExported = IsPaletteCountExported
+				IsPalette9Bit = Globals.Palette9Bit,
+				IsPaletteCountExported = Globals.ExportPaletteCount,
 			}
 			.Export(PaletteFilename);
 
 			Log.Info($"Exported {PaletteFilename}");
 		}
 
-		if (InfoSheetFilename != null)
+		if (Globals.SheetFilename != null)
 		{
 			Log.NewLine();
 			Log.Verbose("Exporting spritesheet");
@@ -117,20 +111,20 @@ public class SpriteRunner : BaseRunner
 			{
 				Data = data,
 
-				BackgroundColour = InfoSheetBackgroundColour!.Value,
-				Scale = InfoSheetScale,
+				BackgroundColour = Globals.SheetBackgroundColour!.Value,
+				Scale = Globals.SheetScale,
 
 				ItemWidth = SpriteWidth,
 				ItemHeight = SpriteHeight,
-				ItemsPerRow = SpritesPerRow,
+				ItemsPerRow = Globals.SheetImagesPerRow,
+				ColoursPerRow = Globals.SheetColoursPerRow,
 				
-				IsPaletteCountExported = IsPaletteCountExported,
-				IsPalette9Bit = IsPalette9Bit,
+				IsPalette9Bit = Globals.Palette9Bit,
 				Is4BitColour = IsSprite4Bit
 			}
-			.Export(InfoSheetFilename);
+			.Export(Globals.SheetFilename);
 
-			Log.Info($"Exported {InfoSheetFilename}");
+			Log.Info($"Exported {Globals.SheetFilename}");
 		}
 	}
 

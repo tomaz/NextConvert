@@ -1,6 +1,7 @@
 ﻿using NextConvert.Sources.Helpers;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Tga;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
@@ -13,13 +14,17 @@ public class ImageSplitter
 {
 	private int ItemWidth { get; set; }
 	private int ItemHeight { get; set; }
+	private Color TransparentColor { get; set; }
+
+	private bool KeepOriginalPositions { get; set; }
 
 	#region Initialization & Disposal
 
-	public ImageSplitter(int width, int height)
+	public ImageSplitter(int width, int height, bool keepOriginalPositions)
 	{
 		ItemWidth = width;
 		ItemHeight = height;
+		KeepOriginalPositions = keepOriginalPositions;
 	}
 
 	#endregion
@@ -42,16 +47,20 @@ public class ImageSplitter
 	/// </summary>
 	public List<Image<Argb32>> Images(Image<Argb32> image, Color transparent)
 	{
-		var result = new List<Image<Argb32>>();
+		TransparentColor = transparent;
+
+		var images = new List<ImageData>();
 		var itemsPerRow = image.Width / ItemWidth;
 
 		image.ProcessPixelRows(accessor =>
 		{
+			var imageY = 0;
+
 			// Handle all item rows.
 			for (int yBase = 0; yBase < accessor.Height; yBase += ItemHeight)
 			{
 				// Prepare the new row of items.
-				var itemsRow = CreateRowOfItemImages(image.Width);
+				var itemsRow = CreateRowOfItemImages(image.Width, imageY);
 
 				// Handle each pixel row of the items.
 				for (int yOffs = 0; yOffs < ItemHeight; yOffs++)
@@ -65,34 +74,105 @@ public class ImageSplitter
 						for (int xOffs = 0; xOffs < ItemWidth; xOffs++)
 						{
 							var color = pixelRow[xBase + xOffs];
-							itemsRow[xBase / ItemWidth].Mutate(o => o.SetPixel(color, xOffs, yOffs));
+							itemsRow[xBase / ItemWidth].Image.Mutate(o => o.SetPixel(color, xOffs, yOffs));
 						}
 					}
 				}
 
+				// Update transparent flag for all images now that we have the data
+				foreach (var image in itemsRow)
+				{
+					image.IsTransparent = image.Image.IsTransparent(TransparentColor);
+				}
+
 				// Add all items to the resulting list.
-				result.AddRange(itemsRow);
+				images.AddRange(itemsRow);
+				imageY++;
 			}
 		});
 
-		return result.RemoveTransparent(transparent);
+		return RemoveTransparent(images).Select(i => i.Image).ToList();
 	}
 
 	#endregion
 
 	#region Helpers
 
-	private List<Image<Argb32>> CreateRowOfItemImages(int imageWidth)
+	private List<ImageData> CreateRowOfItemImages(int imageWidth, int imageY)
 	{
-		var result = new List<Image<Argb32>>();
+		var result = new List<ImageData>();
 		var itemsPerRow = imageWidth / ItemWidth;
 
 		for (int i = 0; i < itemsPerRow; i++)
 		{
-			result.Add(new Image<Argb32>(width: ItemWidth, height: ItemHeight));
+			var image = new Image<Argb32>(width: ItemWidth, height: ItemHeight);
+
+			result.Add(new ImageData
+			{
+				Image = image,
+				X = i,
+				Y = imageY,
+				IsTransparent = false
+			});
 		}
 
 		return result;
+	}
+
+	private List<ImageData> RemoveTransparent(List<ImageData> images)
+	{
+		if (KeepOriginalPositions)
+		{
+			// If we need to respect image positions, we only remove transparent images outside of the max X and Y (except in the last row where we always remove transparent images AFTER the last non-transparent).
+
+			// First detext maximum used coordinates of non-transparent images.
+			var maxUsedX = 0;
+			var maxUsedY = 0;
+			foreach (var image in images)
+			{
+				if (image.IsTransparent) continue;
+				if (image.X > maxUsedX) maxUsedX = image.X;
+				if (image.Y > maxUsedY) maxUsedY = image.Y;
+			}
+
+			// Now selectively remove all transparent images outside the max coordinates. If this yields empty array, exit.
+			var filteredImages = images.Where(i => !i.IsTransparent || (i.X <= maxUsedX && i.Y <= maxUsedY)).ToList();
+			if (filteredImages.Count == 0) return new();
+
+			// Since we parse images from top to bottom and left to right, last images are always from the last used row. Therefore we can easily remove all remaining transparent images from the last row.
+			while (filteredImages.Count > 0)
+			{
+				var image = filteredImages.Last();
+
+				// Exit once we reach rows below last.
+				if (image.Y < maxUsedY) break;
+
+				// Exit as soon as we reach the first non-transparent image.
+				if (!image.IsTransparent) break;
+
+				// Otherwise remove the image and continue
+				filteredImages.RemoveAt(filteredImages.Count - 1);
+			}
+
+			return filteredImages;
+		}
+		else
+		{
+			// If we don't have to respect image positions, we simply remove all transparent images.
+			return images.Where(i => !i.IsTransparent).ToList();
+		}
+	}
+
+	#endregion
+
+	#region Declarations
+
+	private class ImageData
+	{
+		public Image<Argb32> Image { get; set; }
+		public int X { get; set; }
+		public int Y { get; set; }
+		public bool IsTransparent { get; set; }
 	}
 
 	#endregion
@@ -102,14 +182,6 @@ public class ImageSplitter
 
 internal static class ImageSplitterExtensions
 {
-	/// <summary>
-	/// Removes all fully transparent items from the given enumerable.
-	/// </summary>
-	internal static List<Image<Argb32>> RemoveTransparent(this List<Image<Argb32>> images, Color transparent)
-	{
-		return images.Where(image => !image.IsTransparent(transparent)).ToList();
-	}
-
 	/// <summary>
 	/// Determines if the given image is fully transparent.
 	/// </summary>
