@@ -1,13 +1,11 @@
 ﻿using NextConvert.Sources.Base;
 using NextConvert.Sources.Helpers;
-using NextConvert.Sources.Sprites;
+using NextConvert.Sources.Runners;
 
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using System.Runtime.CompilerServices;
 
 return CreateRootCommand().InvokeAsync(args).Result;
 
@@ -39,7 +37,7 @@ Command CreateSpritesCommand()
 	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
 	var spritesheetOption = new Option<FileInfo?>(name: "--spritesheet", description: "Generate sprite sheet image [bmp, png]");
 	var transparentOption = new Option<string?>(name: "--transparent", description: "Transparent colour [optional for transparent png]");
-	var spritesPerRowOption = new Option<int>(name: "--per-row", description: "Number of sprites per row", getDefaultValue: () => 16);
+	var spritesPerRowOption = new Option<int>(name: "--columns", description: "Number of sprite columns for spritesheet", getDefaultValue: () => 16);
 
 	var result = new Command("sprites", "Converts sprites source image")
 	{
@@ -56,10 +54,10 @@ Command CreateSpritesCommand()
 		// Run sprites runner.
 		Run(() => new SpriteRunner
 		{
-			Input = input,
-			Sprites = sprites,
-			Palette = palette,
-			SpriteSheet = spritesheet,
+			InputFilename = input,
+			OutputSpritesFilename = sprites,
+			PaletteFilename = palette,
+			SpriteSheetFilename = spritesheet,
 			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
 			SpritesPerRow = perRow,
 		});

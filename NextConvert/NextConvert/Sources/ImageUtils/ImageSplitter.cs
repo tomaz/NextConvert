@@ -1,9 +1,10 @@
-﻿using SixLabors.ImageSharp;
+﻿using NextConvert.Sources.Helpers;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace NextConvert.Sources.Helpers;
+namespace NextConvert.Sources.ImageUtils;
 
 /// <summary>
 /// Splits image into smaller chunks
@@ -28,18 +29,18 @@ public class ImageSplitter
 	/// <summary>
 	/// Returns the list of all items from the assigned image. Items are always parsed in left-to-right and top-to-bottom order. Fully transparent items are skipped.
 	/// </summary>
-	public IEnumerable<Image<Argb32>> Items(string path, Color transparent)
+	public List<Image<Argb32>> Images(string path, Color transparent)
 	{
 		using (var image = Image.Load<Argb32>(path))
 		{
-			return Items(image, transparent);
+			return Images(image, transparent);
 		}
 	}
 
 	/// <summary>
 	/// Returns the list of all items from the assigned image. Items are always parsed in left-to-right and top-to-bottom order. Fully transparent items are skipped.
 	/// </summary>
-	public IEnumerable<Image<Argb32>> Items(Image<Argb32> image, Color transparent)
+	public List<Image<Argb32>> Images(Image<Argb32> image, Color transparent)
 	{
 		var result = new List<Image<Argb32>>();
 		var itemsPerRow = image.Width / ItemWidth;
@@ -104,9 +105,9 @@ internal static class ImageSplitterExtensions
 	/// <summary>
 	/// Removes all fully transparent items from the given enumerable.
 	/// </summary>
-	internal static IEnumerable<Image<Argb32>> RemoveTransparent(this IEnumerable<Image<Argb32>> images, Color transparent)
+	internal static List<Image<Argb32>> RemoveTransparent(this List<Image<Argb32>> images, Color transparent)
 	{
-		return images.Where(image => !image.IsTransparent(transparent));
+		return images.Where(image => !image.IsTransparent(transparent)).ToList();
 	}
 
 	/// <summary>
