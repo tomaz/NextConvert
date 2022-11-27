@@ -15,7 +15,7 @@ FileInfo? CreateExistingFileTestParseArgument(ArgumentResult result)
 {
 	if (result.Tokens.Count == 0)
 	{
-		result.ErrorMessage = "Input file name is required!";
+		result.ErrorMessage = "Input filename is required!";
 		return null;
 	}
 

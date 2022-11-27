@@ -5,13 +5,18 @@
 /// </summary>
 public class IndexedImage
 {
-	private int[,] data;
+	public int Width { get; private set; }
+	public int Height { get; private set; }
+
+	private byte[,] data;
 
 	#region Initialization & Disposal
 
 	public IndexedImage(int width, int height)
 	{
-		data = new int[height, width];
+		Width = width;
+		Height = height;
+		data = new byte[height, width];
 	}
 
 	#endregion
@@ -21,10 +26,10 @@ public class IndexedImage
 	/// <summary>
 	/// Provides access to the underlying data.
 	/// </summary>
-	public int this[int x, int y]
+	public byte this[int x, int y]
 	{
-		get => data[x, y];
-		set => data[x, y] = value;
+		get => data[y, x];
+		set => data[y, x] = value;
 	}
 
 	#endregion

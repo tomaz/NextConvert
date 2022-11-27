@@ -4,16 +4,21 @@ using NextConvert.Sources.Helpers;
 using NextConvert.Sources.ImageUtils;
 
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.ColorSpaces;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace NextConvert.Sources.Runners;
 
 public class SpriteRunner : BaseRunner
 {
+	private const int SpriteWidth = 16;
+	private const int SpriteHeight = 16;
+
 	public FileInfo? InputFilename { get; set; }
 	public FileInfo? OutputSpritesFilename { get; set; }
 	public FileInfo? PaletteFilename { get; set; }
 	public FileInfo? SpriteSheetFilename { get; set; }
-	public Color? TransparentColor { get; set; }
+	public Argb32? TransparentColor { get; set; }
 	public int SpritesPerRow { get; set; }
 	public bool IsSprite4Bit { get; set; } = false;
 	public bool IsPalette9Bit { get; set; } = true;
@@ -65,17 +70,31 @@ public class SpriteRunner : BaseRunner
 	protected override void OnRun()
 	{
 		Log.Verbose("Parsing sprites");
-		var sprites = new ImageSplitter(16, 16).Images(InputFilename!.FullName, TransparentColor!.Value);
+		var sprites = new ImageSplitter(SpriteWidth, SpriteHeight).Images(InputFilename!.FullName, TransparentColor!.Value);
 		Log.Info($"{sprites.Count} sprites detected");
 
 		Log.Verbose("Mapping colours");
 		var data = new PaletteMapper(IsSprite4Bit).Map(sprites);
 		Log.Info($"{data.Palette.Count} colours mapped");
 
-		Log.NewLine();
+		if (OutputSpritesFilename != null)
+		{
+			Log.NewLine();
+			Log.Verbose("Exporting sprites");
+
+			new ImageExporter
+			{
+				Data = data,
+				Is4BitColour = IsSprite4Bit
+			}
+			.Export(OutputSpritesFilename);
+
+			Log.Info($"Exported {OutputSpritesFilename}");
+		}
 
 		if (PaletteFilename != null)
 		{
+			Log.NewLine();
 			Log.Verbose("Exporting palette");
 
 			new PaletteExporter
@@ -87,6 +106,29 @@ public class SpriteRunner : BaseRunner
 			.Export(PaletteFilename);
 
 			Log.Info($"Exported {PaletteFilename}");
+		}
+
+		if (SpriteSheetFilename != null)
+		{
+			Log.NewLine();
+			Log.Verbose("Exporting spritesheet");
+
+			new SheetExporter
+			{
+				Data = data,
+				TransparentColour = TransparentColor ?? Color.Transparent,
+
+				ItemWidth = SpriteWidth,
+				ItemHeight = SpriteHeight,
+				ItemsPerRow = SpritesPerRow,
+				
+				IsPaletteCountExported = IsPaletteCountExported,
+				IsPalette9Bit = IsPalette9Bit,
+				Is4BitColour = IsSprite4Bit
+			}
+			.Export(SpriteSheetFilename);
+
+			Log.Info($"Exported {SpriteSheetFilename}");
 		}
 	}
 

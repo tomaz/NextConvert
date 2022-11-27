@@ -52,7 +52,7 @@ public class PaletteMapper
 
 					for (int x = 0; x < row.Length; x++)
 					{
-						var index = result.AddIfDistinct(row[x]);
+						var index = (byte)result.AddIfDistinct(row[x]);
 
 						indexedImage[x, y] = index;
 					}

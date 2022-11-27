@@ -6,8 +6,11 @@ namespace NextConvert.Sources.Helpers;
 
 public static class IImageProcessingContextExtensions
 {
-	public static void SetPixel(this IImageProcessingContext context, Color color, int x, int y)
+	/// <summary>
+	/// Draws a pixel into the given image processing context.
+	/// </summary>
+	public static void SetPixel(this IImageProcessingContext context, Color colour, int x, int y)
 	{
-		context.Fill(color, new RectangleF(x, y, 1, 1));
+		context.Fill(colour, new RectangleF(x, y, 1, 1));
 	}
 }

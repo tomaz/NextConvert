@@ -8,9 +8,8 @@ namespace NextConvert.Sources.Exporters;
 public class PaletteExporter
 {
 	public IndexedData? Data { get; set; }
-	public bool IsPaletteCountExported { get; set; } = true;
 	public bool IsPalette9Bit { get; set; } = true;
-
+	public bool IsPaletteCountExported { get; set; } = true;
 
 	#region Public
 
@@ -29,25 +28,14 @@ public class PaletteExporter
 			{
 				if (IsPalette9Bit)
 				{
-					var r = colour.R.Component(3);
-					var g = colour.G.Component(3);
-					var b = colour.B.Component(3);
-
-					var rgb = (byte)(r << 5 | g << 2 | b >> 1);
-					var xxb = (byte)(b & 0b00000001);
-
-					writer.Write(rgb);
-					writer.Write(xxb);
+					foreach (var b in colour.As9BitColour)
+					{
+						writer.Write(b);
+					}
 				}
 				else
 				{
-					var r = colour.R.Component(3);
-					var g = colour.G.Component(3);
-					var b = colour.B.Component(2);
-
-					var rgb = (byte)(r << 5 | g << 2 | b);
-
-					writer.Write(rgb);
+					writer.Write(colour.As8BitColour);
 				}
 			}
 		}
@@ -55,16 +43,3 @@ public class PaletteExporter
 
 	#endregion
 }
-
-#region Extensions
-
-internal static class PaletteExporterExtensions
-{
-	internal static byte Component(this byte original, byte bits)
-	{
-		var multiple = (decimal)Math.Pow(2, bits) - 1;
-		return (byte)Math.Round((decimal)original * multiple / 255);
-	}
-}
-
-#endregion
