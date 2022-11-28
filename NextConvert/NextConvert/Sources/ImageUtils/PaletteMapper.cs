@@ -8,25 +8,14 @@ namespace NextConvert.Sources.ImageUtils;
 /// </summary>
 public class PaletteMapper
 {
-	private Argb32 TransparentColour { get; set; }
-	private bool IsImage4Bit { get; set; }
-
-	#region Initialization & Disposal
-
-	public PaletteMapper(bool is4Bit)
-	{
-		IsImage4Bit = is4Bit;
-	}
-
-	#endregion
+	public Argb32 TransparentColour { get; set; }
+	public bool Is4BitPalette { get; set; }
 
 	#region Public
 
-	public IndexedData Map(IEnumerable<Image<Argb32>> images, Argb32 transparentColour)
+	public IndexedData Map(IEnumerable<Image<Argb32>> images)
 	{
-		TransparentColour = transparentColour;
-
-		var result = IsImage4Bit ? Colours4Bit(images) : Colours8Bit(images);
+		var result = Is4BitPalette ? Colours4Bit(images) : Colours8Bit(images);
 
 		Validate(result);
 
@@ -43,7 +32,7 @@ public class PaletteMapper
 
 		foreach (var image in images)
 		{
-			var indexedImage = new IndexedImage(width: image.Width, height: image.Height);
+			var indexedImage = new IndexedData.Image(width: image.Width, height: image.Height);
 
 			result.Images.Add(indexedImage);
 
@@ -80,7 +69,7 @@ public class PaletteMapper
 
 	private static void Validate(IndexedData data)
 	{
-		if (data.Palette.Count > 256) throw new Exception($"Detected {data.Palette.Count} colours, only 256 allowed.");
+		if (data.Colours.Count > 256) throw new Exception($"Detected {data.Colours.Count} colours, only 256 allowed.");
 	}
 
 	#endregion

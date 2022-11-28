@@ -1,4 +1,5 @@
-﻿using NextConvert.Sources.ImageUtils;
+﻿using NextConvert.Sources.Helpers;
+using NextConvert.Sources.ImageUtils;
 
 using System.Collections;
 
@@ -14,11 +15,11 @@ public class ImageExporter
 
 	#region Public
 
-	public void Export(FileInfo filename)
+	public void Export(IStreamProvider streamProvider)
 	{
 		if (Data == null) throw new InvalidDataException("Data is required, make sure property is assigned");
 
-		using (var writer = new BinaryWriter(File.Open(filename.FullName, FileMode.Create)))
+		using (var writer = new BinaryWriter(streamProvider.GetStream()))
 		{
 			foreach (var image in Data.Images)
 			{
@@ -38,7 +39,7 @@ public class ImageExporter
 
 	#region Helpers
 
-	private void Export4Bit(BinaryWriter writer, IndexedImage image)
+	private void Export4Bit(BinaryWriter writer, IndexedData.Image image)
 	{
 		for (int y = 0; y < image.Height; y++)
 		{
@@ -52,7 +53,7 @@ public class ImageExporter
 		}
 	}
 
-	private void Export8Bit(BinaryWriter writer, IndexedImage image)
+	private void Export8Bit(BinaryWriter writer, IndexedData.Image image)
 	{
 		for (int y = 0; y < image.Height; y++)
 		{

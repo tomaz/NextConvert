@@ -1,17 +1,11 @@
 ﻿using NextConvert.Sources.Helpers;
 using NextConvert.Sources.ImageUtils;
 
-using SixLabors.Fonts;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.ColorSpaces.Conversion;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-
-using System.Runtime.CompilerServices;
-using System.Security.Principal;
-using System.Text;
-using System.Xml;
 
 namespace NextConvert.Sources.Exporters;
 
@@ -87,7 +81,7 @@ public class SheetExporter
 
 	#region Private properties
 
-	private FontRenderer FontRenderer { get; set; }
+	private FontRenderer? FontRenderer { get; set; } = new(1);
 
 	private Argb32 BorderColour { get; set; }
 	private Argb32 IdentifierColour { get; set; }
@@ -105,7 +99,7 @@ public class SheetExporter
 
 	#region Public
 
-	public void Export(FileInfo filename)
+	public void Export(IStreamProvider streamProvider)
 	{
 		if (Data == null) throw new InvalidDataException("Data is required, make sure property is assigned");
 
@@ -126,7 +120,7 @@ public class SheetExporter
 				DrawPalette(context);
 			});
 
-			image.Save(filename);
+			image.Save(streamProvider);
 		}
 	}
 
@@ -169,7 +163,7 @@ public class SheetExporter
 				y: Scaled(y + 1));
 		}
 
-		void DrawImage(IndexedImage image)
+		void DrawImage(IndexedData.Image image)
 		{
 			// Render image itself.
 			for (int iy = 0; iy < image.Height; iy++)
@@ -177,7 +171,7 @@ public class SheetExporter
 				for (int ix = 0; ix < image.Width; ix++)
 				{
 					var colourIndex = image[ix, iy];
-					var colour = Data!.Palette[colourIndex];
+					var colour = Data!.Colours[colourIndex];
 
 					context.Fill(colour.AsArgb32, new RectangleF(
 						x: Scaled(x + ix + 1),
@@ -315,7 +309,7 @@ public class SheetExporter
 			}
 		}
 
-		foreach (var colour in Data!.Palette)
+		foreach (var colour in Data!.Colours)
 		{
 			// Draw the colour
 			DrawBorder();
@@ -370,7 +364,7 @@ public class SheetExporter
 		var itemColumnWidth = ItemWidth + ItemSpacing;
 		var itemsWidth = itemColumnWidth * itemColumns;
 
-		var paletteColumns = Math.Min(ColoursPerRow, Data.Palette.Count);
+		var paletteColumns = Math.Min(ColoursPerRow, Data.Colours.Count);
 		var paletteColumnWidth = ColourWidth + ColourSpacing + ColourTextWidth;
 		var paletteWidth = paletteColumnWidth * paletteColumns;
 
@@ -387,7 +381,7 @@ public class SheetExporter
 		var itemRowHeight = ItemHeight + ItemSpacing + HeaderHeight;
 		var itemsHeight = itemRowHeight * itemRows;
 
-		var paletteRows = (int)Math.Ceiling((double)Data.Palette.Count / (double)ColoursPerRow);
+		var paletteRows = (int)Math.Ceiling((double)Data.Colours.Count / (double)ColoursPerRow);
 		var paletteRowHeight = ColourHeight + ColourSpacing + HeaderHeight;
 		var paletteHeight = paletteRowHeight * paletteRows;
 
@@ -409,34 +403,38 @@ internal static class SheetExporterExtensions
 	/// <summary>
 	/// Determines the format based on the file extension and saves the image or throws exception if format is not recognized, or saving fails.
 	/// </summary>
-	internal static void Save<T>(this Image<T> image, FileInfo filename) where T : unmanaged, IPixel<T>
+	internal static void Save<T>(this Image<T> image, IStreamProvider streamProvider) where T : unmanaged, IPixel<T>
 	{
-		switch (filename.Extension.ToLower().Replace(".", ""))
+		switch (streamProvider.GetExtension()?.Replace(".", "")?.ToLower())
 		{
-			case "bmp":
-				image.SaveAsBmp(filename.FullName);
-				break;
-			case "png":
-				image.SaveAsPng(filename.FullName);
+			case null:
+				// Null is used mainly for unit tests to save to memory.
+				image.SaveAsBmp(streamProvider.GetStream());
 				break;
 			case "jpg":
 			case "jpeg":
-				image.SaveAsJpeg(filename.FullName);
+				image.SaveAsJpeg(streamProvider.GetStream());
+				break;
+			case "bmp":
+				image.SaveAsBmp(streamProvider.GetStream());
+				break;
+			case "png":
+				image.SaveAsPng(streamProvider.GetStream());
 				break;
 			case "gif":
-				image.SaveAsGif(filename.FullName);
+				image.SaveAsGif(streamProvider.GetStream());
 				break;
 			case "pbm":
-				image.SaveAsPbm(filename.FullName);
+				image.SaveAsPbm(streamProvider.GetStream());
 				break;
 			case "tga":
-				image.SaveAsTga(filename.FullName);
+				image.SaveAsTga(streamProvider.GetStream());
 				break;
 			case "webp":
-				image.SaveAsWebp(filename.FullName);
+				image.SaveAsWebp(streamProvider.GetStream());
 				break;
 			default:
-				throw new InvalidDataException($"Image format {filename.Extension} not supported, use one of `bmp`, `png`, `jpg`, `gif`, `pbm`, `tga`, `webp`");
+				throw new InvalidDataException($"Image format {streamProvider.GetExtension()} not supported, use one of `bmp`, `png`, `jpg`, `gif`, `pbm`, `tga`, `webp`");
 		}
 	}
 }

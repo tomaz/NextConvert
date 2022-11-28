@@ -4,7 +4,6 @@ using NextConvert.Sources.Helpers;
 using NextConvert.Sources.ImageUtils;
 
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.ColorSpaces;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace NextConvert.Sources.Runners;
@@ -14,10 +13,11 @@ public class SpriteRunner : BaseRunner
 	private const int SpriteWidth = 16;
 	private const int SpriteHeight = 16;
 
-	public FileInfo? InputFilename { get; set; }
-	public FileInfo? OutputSpritesFilename { get; set; }
-	public FileInfo? PaletteFilename { get; set; }
-	public bool IsSprite4Bit { get; set; } = false;		// not possible to change right now, but we use this option in several places, so keeping it as placeholder
+	public IStreamProvider? InputStreamProvider { get; set; }
+	public IStreamProvider? OutputSpritesStreamProvider { get; set; }
+	public IStreamProvider? OutputPaletteStreamProvider { get; set; }
+
+	private bool IsSprite4Bit { get; set; } = false;		// not possible to change right now, but we use this option in several places, so keeping it as placeholder
 
 	#region Overrides
 
@@ -27,13 +27,13 @@ public class SpriteRunner : BaseRunner
 
 		Log.NewLine();
 		Log.Verbose("Will parse:");
-		Log.Verbose($"{InputFilename}");
+		Log.Verbose($"{InputStreamProvider}");
 		
 		Log.NewLine();
 		Log.Verbose("Will generate:");
-		if (OutputSpritesFilename != null) Log.Verbose($"{OutputSpritesFilename}");
-		if (PaletteFilename != null) Log.Verbose($"{PaletteFilename}");
-		if (Globals.SheetFilename != null) Log.Verbose($"{Globals.SheetFilename}");
+		if (OutputSpritesStreamProvider != null) Log.Verbose($"{OutputSpritesStreamProvider}");
+		if (OutputPaletteStreamProvider != null) Log.Verbose($"{OutputPaletteStreamProvider}");
+		if (Globals.SheetStreamProvider != null) Log.Verbose($"{Globals.SheetStreamProvider}");
 		
 		Log.NewLine();
 		Log.Verbose("Options:");
@@ -48,85 +48,106 @@ public class SpriteRunner : BaseRunner
 	{
 		base.OnValidate();
 
-		// If both, output raw file or palette file are missing, there's no point in running anything.
-		if (OutputSpritesFilename == null && PaletteFilename == null)
+		// At least some output should be provided in order to make sense in running anything.
+		if (OutputSpritesStreamProvider == null && OutputPaletteStreamProvider == null && Globals.SheetStreamProvider == null)
 		{
 			throw new ArgumentException("Either output or palette file should be provided");
-		}
-
-		// If transparent colour is missing and image is not png, ignore.
-		if (PaletteFilename == null && InputFilename!.Extension.ToLower() != "png")
-		{
-			throw new ArgumentException("Transparent colour is required for non-transparent input file");
 		}
 	}
 
 	protected override void OnRun()
 	{
-		Log.Verbose("Parsing sprites");
-		var sprites = new ImageSplitter(SpriteWidth, SpriteHeight, Globals.KeepOriginalPositions).Images(InputFilename!.FullName, TransparentColor!.Value);
-		Log.Info($"{sprites.Count} sprites detected");
+		var images = SplitImage();
+		var data = MapImages(images);
 
-		Log.Verbose("Mapping colours");
-		var data = new PaletteMapper(IsSprite4Bit).Map(sprites, TransparentColor!.Value);
-		Log.Info($"{data.Palette.Count} colours mapped");
-
-		if (OutputSpritesFilename != null)
+		if (OutputSpritesStreamProvider != null)
 		{
-			Log.NewLine();
-			Log.Verbose("Exporting sprites");
-
-			new ImageExporter
-			{
-				Data = data,
-				Is4BitColour = IsSprite4Bit,
-			}
-			.Export(OutputSpritesFilename);
-
-			Log.Info($"Exported {OutputSpritesFilename}");
+			CreateSpritesFile(data);
 		}
 
-		if (PaletteFilename != null)
+		if (OutputPaletteStreamProvider != null)
 		{
-			Log.NewLine();
-			Log.Verbose("Exporting palette");
-
-			new PaletteExporter
-			{
-				Data = data,
-				IsPalette9Bit = Globals.Palette9Bit,
-				IsPaletteCountExported = Globals.ExportPaletteCount,
-			}
-			.Export(PaletteFilename);
-
-			Log.Info($"Exported {PaletteFilename}");
+			CreatePaletteFile(data);
 		}
 
-		if (Globals.SheetFilename != null)
+		if (Globals.SheetStreamProvider != null)
 		{
-			Log.NewLine();
-			Log.Verbose("Exporting spritesheet");
-
-			new SheetExporter
-			{
-				Data = data,
-
-				BackgroundColour = Globals.SheetBackgroundColour!.Value,
-				Scale = Globals.SheetScale,
-
-				ItemWidth = SpriteWidth,
-				ItemHeight = SpriteHeight,
-				ItemsPerRow = Globals.SheetImagesPerRow,
-				ColoursPerRow = Globals.SheetColoursPerRow,
-				
-				IsPalette9Bit = Globals.Palette9Bit,
-				Is4BitColour = IsSprite4Bit
-			}
-			.Export(Globals.SheetFilename);
-
-			Log.Info($"Exported {Globals.SheetFilename}");
+			CreateInfoSheet(data);
 		}
 	}
+
+	#endregion
+
+	#region Helpers
+
+	private List<Image<Argb32>> SplitImage() => RunTask(
+		onStartMessage: "Parsing sprites",
+		onEndMessage: (result) => $"{result.Count} sprites detected",
+		task: () => new ImageSplitter
+		{
+			TransparentColor = TransparentColor!.Value,
+			ItemWidth = SpriteWidth,
+			ItemHeight = SpriteHeight,
+			IgnoreCopies = Globals.IgnoreCopies,
+			KeepBoxedTransparents = Globals.KeepBoxedTransparents,
+		}
+		.Images(InputStreamProvider!)
+	);
+
+	private IndexedData MapImages(List<Image<Argb32>> images) => RunTask(
+		onStartMessage: "Mapping colours",
+		onEndMessage: (data) => $"{data.Colours.Count} colours mapped",
+		task: () => new PaletteMapper
+		{
+			TransparentColour = TransparentColor!.Value,
+			Is4BitPalette = IsSprite4Bit
+		}
+		.Map(images)
+	);
+
+	private void CreateSpritesFile(IndexedData data) => RunTask(
+		onStartMessage: "Exporting sprites",
+		onEndMessage: () => $"Exported {OutputSpritesStreamProvider}",
+		task: () => new ImageExporter
+		{
+			Data = data,
+			Is4BitColour = IsSprite4Bit,
+		}
+		.Export(OutputSpritesStreamProvider!)
+	);
+
+	private void CreatePaletteFile(IndexedData data) => RunTask(
+		onStartMessage: "Exporting palette",
+		onEndMessage: () => $"Exported {OutputPaletteStreamProvider}",
+		task: () => new PaletteExporter
+		{
+			Data = data,
+			IsPalette9Bit = Globals.Palette9Bit,
+			IsPaletteCountExported = Globals.ExportPaletteCount,
+		}
+		.Export(OutputPaletteStreamProvider!)
+	);
+
+	private void CreateInfoSheet(IndexedData data) => RunTask(
+		onStartMessage: "Exporting spritesheet",
+		onEndMessage: () => $"Exported {Globals.SheetStreamProvider}",
+		task: () => new SheetExporter
+		{
+			Data = data,
+
+			BackgroundColour = Globals.SheetBackgroundColour!.Value,
+			Scale = Globals.SheetScale,
+
+			ItemWidth = SpriteWidth,
+			ItemHeight = SpriteHeight,
+			ItemsPerRow = Globals.SheetImagesPerRow,
+			ColoursPerRow = Globals.SheetColoursPerRow,
+
+			IsPalette9Bit = Globals.Palette9Bit,
+			Is4BitColour = IsSprite4Bit
+		}
+		.Export(Globals.SheetStreamProvider!)
+	);
 
 	#endregion
 }

@@ -3,6 +3,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 
 using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Serialization;
 
 namespace NextConvert.Sources.Base;
@@ -12,7 +13,7 @@ namespace NextConvert.Sources.Base;
 /// </summary>
 public abstract class BaseRunner
 {
-	public GlobalOptionsBinder.GlobalOptions Globals { get; set; }
+	public GlobalOptionsBinder.GlobalOptions Globals { get; set; } = new();
 	public Argb32? TransparentColor { get; set; }
 
 	#region Subclass
@@ -61,13 +62,43 @@ public abstract class BaseRunner
 
 	#region Helpers
 
+	/// <summary>
+	/// Runs the given task with default logging.
+	/// </summary>
+	protected static T RunTask<T>(string onStartMessage, Func<T, string> onEndMessage, Func<T> task) 
+	{
+		Log.Verbose(onStartMessage);
+
+		T result = task();
+
+		Log.Info(onEndMessage(result));
+
+		return result;
+	}
+	
+	/// <summary>
+	/// Runs the given task with default logging - variant that doesn't produce result.
+	/// </summary>
+	protected static void RunTask(string onStartMessage, Func<string> onEndMessage, Action task)
+	{
+		Log.Verbose(onStartMessage);
+
+		task();
+
+		Log.Info(onEndMessage());
+	}
+
+	/// <summary>
+	/// This should be called at the end of the <see cref="OnDescribe"/> in subclass to include description of global parameters.
+	/// </summary>
 	protected void DescribeGlobals()
 	{
 		Log.Verbose($"Bits per colour: {(Globals.Palette9Bit ? 9 : 8)}");
 		Log.Verbose($"Export palette count: {Globals.ExportPaletteCount}");
-		Log.Verbose($"Keep original positions: {Globals.KeepOriginalPositions}");
+		Log.Verbose($"Keep boxed transparents: {Globals.KeepBoxedTransparents}");
+		Log.Verbose($"Ingore copies/mirrors/rotations: {Globals.IgnoreCopies}");
 
-		if (Globals.SheetFilename != null)
+		if (Globals.SheetStreamProvider != null)
 		{
 			Log.NewLine();
 			Log.Verbose("Sheet options:");

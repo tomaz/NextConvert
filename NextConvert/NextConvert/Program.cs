@@ -5,8 +5,6 @@ using NextConvert.Sources.Runners;
 using SixLabors.ImageSharp;
 
 using System.CommandLine;
-using System.CommandLine.Binding;
-using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 
 return CreateRootCommand().InvokeAsync(args).Result;
@@ -52,11 +50,11 @@ Command CreateSpritesCommand()
 		// Run sprites runner.
 		Run(() => new SpriteRunner
 		{
-			Globals = (GlobalOptionsBinder.GlobalOptions)globalOptions,
-			InputFilename = input,
+			Globals = globalOptions,
+			InputStreamProvider = FileInfoStreamProvider.Create(input),
+			OutputSpritesStreamProvider = FileInfoStreamProvider.Create(sprites),
+			OutputPaletteStreamProvider = FileInfoStreamProvider.Create(palette),
 			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
-			OutputSpritesFilename = sprites,
-			PaletteFilename = palette,
 		});
 	},
 	inputOption,
@@ -80,7 +78,8 @@ Command CreateRootCommand()
 
 	result.AddGlobalOption(GlobalOptionsBinder.Palette9BitOption);
 	result.AddGlobalOption(GlobalOptionsBinder.ExportPaletteCountOption);
-	result.AddGlobalOption(GlobalOptionsBinder.KeepOriginalPositionsOption);
+	result.AddGlobalOption(GlobalOptionsBinder.IgnoreCopiesOption);
+	result.AddGlobalOption(GlobalOptionsBinder.KeepBoxedTransparentsOption);
 
 	result.AddCommand(CreateSpritesCommand());
 

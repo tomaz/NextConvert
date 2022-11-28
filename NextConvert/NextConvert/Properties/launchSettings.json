@@ -2,7 +2,7 @@
   "profiles": {
     "NextConvert": {
       "commandName": "Project",
-      "commandLineArgs": "--sheet-background #011E2B\r\n--sheet-image-columns 5\r\n--sheet-palette-columns 8\r\n--sheet-scale 2\r\n--9-bit-palette\r\n--export-palette-count\r\n--keep-original-positions\r\nsprites\r\n--input c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.bmp\r\n--sprites c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.spr\r\n--palette c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.pal\r\n--sheet c:\\Users\\tkrag\\Downloads\\export\\descend\\spritesheet.bmp\r\n--transparent #FF00FF"
+      "commandLineArgs": "--sheet-background #011E2B\r\n--sheet-image-columns 5\r\n--sheet-palette-columns 8\r\n--sheet-scale 2\r\n--export-palette-count\r\n--keep-boxed-transparents\r\n--ignore-copies\r\nsprites\r\n--input c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.bmp\r\n--sprites c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.spr\r\n--palette c:\\Users\\tkrag\\Downloads\\export\\descend\\sprites.pal\r\n--sheet c:\\Users\\tkrag\\Downloads\\export\\descend\\spritesheet.bmp\r\n--transparent 255,0,255"
     }
   }
 }

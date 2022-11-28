@@ -18,7 +18,8 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 
 	public static readonly Option<bool> Palette9BitOption = new(name: "--9-bit-palette", description: "Use 9-bit palette instead of 8", getDefaultValue: () => false);
 	public static readonly Option<bool> ExportPaletteCountOption = new(name: "--export-palette-count", description: "Export palette count to the first byte of the file", getDefaultValue: () => false);
-	public static readonly Option<bool> KeepOriginalPositionsOption = new(name: "--keep-original-positions", description: "Keep transparent images in the middle of image block", getDefaultValue: () => false);
+	public static readonly Option<bool> IgnoreCopiesOption = new(name: "--ignore-copies", description: "Ignore copies, rotated and mirrored images", getDefaultValue: () => false);
+	public static readonly Option<bool> KeepBoxedTransparentsOption = new(name: "--keep-boxed-transparents", description: "Keep transparent images in the middle of image block", getDefaultValue: () => false);
 
 	#region Overrides
 
@@ -26,14 +27,15 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 	{
 		return new GlobalOptions
 		{
-			SheetFilename = bindingContext.ParseResult.GetValueForOption(SheetFilenameOption),
+			SheetStreamProvider = FileInfoStreamProvider.Create(bindingContext.ParseResult.GetValueForOption(SheetFilenameOption)),
 			SheetBackgroundColour = bindingContext.ParseResult.GetValueForOption(SheetBackgroundOption)?.ToColor(),
 			SheetImagesPerRow = bindingContext.ParseResult.GetValueForOption(SheetImagesPerRowOption),
 			SheetColoursPerRow = bindingContext.ParseResult.GetValueForOption(SheetColoursPerRowOption),
 			SheetScale = bindingContext.ParseResult.GetValueForOption(SheetScaleOption),
 			Palette9Bit = bindingContext.ParseResult.GetValueForOption(Palette9BitOption),
 			ExportPaletteCount = bindingContext.ParseResult.GetValueForOption(ExportPaletteCountOption),
-			KeepOriginalPositions = bindingContext.ParseResult.GetValueForOption(KeepOriginalPositionsOption)
+			IgnoreCopies = bindingContext.ParseResult.GetValueForOption(IgnoreCopiesOption),
+			KeepBoxedTransparents = bindingContext.ParseResult.GetValueForOption(KeepBoxedTransparentsOption)
 		};
 	}
 
@@ -42,14 +44,15 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 	#region Declarations
 
 	public class GlobalOptions {
-		public FileInfo? SheetFilename { get; set; }
+		public IStreamProvider? SheetStreamProvider { get; set; }
 		public Argb32? SheetBackgroundColour { get; set; }
 		public int SheetImagesPerRow { get; set; }
 		public int SheetColoursPerRow { get; set; }
 		public int SheetScale { get; set; }
 		public bool Palette9Bit { get; set; }
 		public bool ExportPaletteCount { get; set; }
-		public bool KeepOriginalPositions { get; set; }
+		public bool IgnoreCopies { get; set; }
+		public bool KeepBoxedTransparents { get; set; }
 	}
 
 	#endregion
