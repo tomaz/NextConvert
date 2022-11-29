@@ -1,4 +1,5 @@
-﻿using NextConvert.Sources.ImageUtils;
+﻿using NextConvert.Sources.Helpers;
+using NextConvert.Sources.ImageUtils;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -57,74 +58,144 @@ public static class ResourcesUtils
 		};
 	}
 
-	public static List<ImageData> GetSpriteResultImages(bool keepBoxedTransparents, bool ignoreCopies)
+	public static List<ImageData> GetSpriteResultImages(KeepTransparentType keepTransparents, bool ignoreCopies)
 	{
-		if (!keepBoxedTransparents && !ignoreCopies)
+		return keepTransparents switch
 		{
-			return new List<ImageData>()
+			KeepTransparentType.None when ignoreCopies => new()
 			{
+				// line 1 (second 1 is copy)
+				GetSpriteResultImage(SpriteImage.Chequered),
+				GetSpriteResultImage(SpriteImage.One),
+				GetSpriteResultImage(SpriteImage.Two),
+				GetSpriteResultImage(SpriteImage.Three),
+				// line 2 (all 1-es are copies)
+				// line 3
+				GetSpriteResultImage(SpriteImage.WhiteBox),
+				GetSpriteResultImage(SpriteImage.RedBox),
+				GetSpriteResultImage(SpriteImage.Four),
+				// line 4 (only transparents)
+			},
+
+			KeepTransparentType.None when !ignoreCopies => new()
+			{
+				// line 1
 				GetSpriteResultImage(SpriteImage.Chequered),
 				GetSpriteResultImage(SpriteImage.One),
 				GetSpriteResultImage(SpriteImage.Two),
 				GetSpriteResultImage(SpriteImage.Three),
 				GetSpriteResultImage(SpriteImage.One),
+				// line 2
 				GetSpriteResultImage(SpriteImage.OneRotatedCCW90),
 				GetSpriteResultImage(SpriteImage.OneRotated180),
 				GetSpriteResultImage(SpriteImage.OneRotatedCW90),
 				GetSpriteResultImage(SpriteImage.OneMirroredHorizontally),
 				GetSpriteResultImage(SpriteImage.OneRotated180),
+				// line 3
 				GetSpriteResultImage(SpriteImage.WhiteBox),
 				GetSpriteResultImage(SpriteImage.RedBox),
 				GetSpriteResultImage(SpriteImage.Four),
-			};
-		}
-		else if (!keepBoxedTransparents && ignoreCopies)
-		{
-			return new List<ImageData>()
+				// line 4 (only transparents)
+			},
+
+			KeepTransparentType.All when ignoreCopies => new()
 			{
+				// line 1 (second 1 is copy)
 				GetSpriteResultImage(SpriteImage.Chequered),
 				GetSpriteResultImage(SpriteImage.One),
 				GetSpriteResultImage(SpriteImage.Two),
 				GetSpriteResultImage(SpriteImage.Three),
+				GetSpriteResultImage(null),
+				// line 2 (all 1-es are copies)
+				GetSpriteResultImage(null),
+				// line 3
+				GetSpriteResultImage(null),
 				GetSpriteResultImage(SpriteImage.WhiteBox),
 				GetSpriteResultImage(SpriteImage.RedBox),
 				GetSpriteResultImage(SpriteImage.Four),
-			};
-		}
-		else if (keepBoxedTransparents && !ignoreCopies)
-		{
-			return new List<ImageData>()
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				// line 4
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+			},
+
+			KeepTransparentType.All when !ignoreCopies => new()
 			{
+				// line 1 (second 1 is copy)
 				GetSpriteResultImage(SpriteImage.Chequered),
 				GetSpriteResultImage(SpriteImage.One),
 				GetSpriteResultImage(SpriteImage.Two),
 				GetSpriteResultImage(SpriteImage.Three),
 				GetSpriteResultImage(SpriteImage.One),
+				GetSpriteResultImage(null),
+				// line 2 (all 1-es are copies)
 				GetSpriteResultImage(SpriteImage.OneRotatedCCW90),
 				GetSpriteResultImage(SpriteImage.OneRotated180),
 				GetSpriteResultImage(SpriteImage.OneRotatedCW90),
 				GetSpriteResultImage(SpriteImage.OneMirroredHorizontally),
 				GetSpriteResultImage(SpriteImage.OneRotated180),
 				GetSpriteResultImage(null),
-				GetSpriteResultImage(SpriteImage.WhiteBox),
-				GetSpriteResultImage(SpriteImage.RedBox),
-				GetSpriteResultImage(SpriteImage.Four),
-			};
-		}
-		else
-		{
-			return new List<ImageData>()
-			{
-				GetSpriteResultImage(SpriteImage.Chequered),
-				GetSpriteResultImage(SpriteImage.One),
-				GetSpriteResultImage(SpriteImage.Two),
-				GetSpriteResultImage(SpriteImage.Three),
+				// line 3
 				GetSpriteResultImage(null),
 				GetSpriteResultImage(SpriteImage.WhiteBox),
 				GetSpriteResultImage(SpriteImage.RedBox),
 				GetSpriteResultImage(SpriteImage.Four),
-			};
-		}
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				// line 4
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(null),
+			},
+
+			KeepTransparentType.Boxed when ignoreCopies => new()
+			{
+				// line 1 (second 1 is copy)
+				GetSpriteResultImage(SpriteImage.Chequered),
+				GetSpriteResultImage(SpriteImage.One),
+				GetSpriteResultImage(SpriteImage.Two),
+				GetSpriteResultImage(SpriteImage.Three),
+				// line 2 (all 1-es are copies)
+				// line 3
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(SpriteImage.WhiteBox),
+				GetSpriteResultImage(SpriteImage.RedBox),
+				GetSpriteResultImage(SpriteImage.Four),
+				// line 4
+			},
+
+			KeepTransparentType.Boxed when !ignoreCopies => new()
+			{
+				// line 1 (second 1 is copy)
+				GetSpriteResultImage(SpriteImage.Chequered),
+				GetSpriteResultImage(SpriteImage.One),
+				GetSpriteResultImage(SpriteImage.Two),
+				GetSpriteResultImage(SpriteImage.Three),
+				GetSpriteResultImage(SpriteImage.One),
+				// line 2 (all 1-es are copies)
+				GetSpriteResultImage(SpriteImage.OneRotatedCCW90),
+				GetSpriteResultImage(SpriteImage.OneRotated180),
+				GetSpriteResultImage(SpriteImage.OneRotatedCW90),
+				GetSpriteResultImage(SpriteImage.OneMirroredHorizontally),
+				GetSpriteResultImage(SpriteImage.OneRotated180),
+				// line 3
+				GetSpriteResultImage(null),
+				GetSpriteResultImage(SpriteImage.WhiteBox),
+				GetSpriteResultImage(SpriteImage.RedBox),
+				GetSpriteResultImage(SpriteImage.Four),
+				// line 4
+			},
+
+			_ => new(),
+		};
 	}
 
 	public static List<IndexedData.Colour> GetSpriteResultsPalette(bool is4Bit)

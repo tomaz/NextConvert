@@ -1,22 +1,20 @@
 ﻿using NextConvert.Sources.Exporters;
+using NextConvert.Sources.Helpers;
 using NextConvert.Sources.ImageUtils;
-
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp;
 
 namespace UnitTests.Helpers;
 
 public static class TestUtils
 {
-	public static ImageSplitter CreateImageSplitter(bool keepBoxedTransparents = false, bool ignoreCopies = false)
+	public static ImageSplitter CreateImageSplitter(KeepTransparentType keepTransparents = KeepTransparentType.None, bool ignoreCopies = false)
 	{
 		return new ImageSplitter
 		{
 			TransparentColor = ResourcesUtils.GetSpritesTransparentColour(),
+			KeepTransparents = keepTransparents,
 			ItemWidth = 16,
 			ItemHeight = 16,
 			IgnoreCopies = ignoreCopies,
-			KeepBoxedTransparents = keepBoxedTransparents,
 		};
 	}
 

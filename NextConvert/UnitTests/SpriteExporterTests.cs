@@ -1,22 +1,28 @@
-﻿using UnitTests.Helpers;
+﻿using NextConvert.Sources.Helpers;
+
+using UnitTests.Helpers;
 
 namespace UnitTests;
 
 public class SpriteExporterTests
 {
 	[Theory]
-	[InlineData(false, false, false)]
-	[InlineData(false, false, true)]
-	[InlineData(false, true, false)]
-	[InlineData(false, true, true)]
-	[InlineData(true, false, false)]
-	[InlineData(true, false, true)]
-	[InlineData(true, true, false)]
-	[InlineData(true, true, true)]
-	public void Sprites_ShouldExtractAllImages(bool keepBoxedTransparents, bool ignoreCopies, bool is4Bitimage)
+	[InlineData(KeepTransparentType.All, false, false)]
+	[InlineData(KeepTransparentType.All, false, true)]
+	[InlineData(KeepTransparentType.All, true, false)]
+	[InlineData(KeepTransparentType.All, true, true)]
+	[InlineData(KeepTransparentType.None, false, false)]
+	[InlineData(KeepTransparentType.None, false, true)]
+	[InlineData(KeepTransparentType.None, true, false)]
+	[InlineData(KeepTransparentType.None, true, true)]
+	[InlineData(KeepTransparentType.Boxed, false, false)]
+	[InlineData(KeepTransparentType.Boxed, false, true)]
+	[InlineData(KeepTransparentType.Boxed, true, false)]
+	[InlineData(KeepTransparentType.Boxed, true, true)]
+	public void Sprites_ShouldExtractAllImages(KeepTransparentType keepTransparent, bool ignoreCopies, bool is4Bitimage)
 	{
 		// setup
-		var images = TestUtils.CreateImageSplitter(keepBoxedTransparents, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
+		var images = TestUtils.CreateImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
 		var data = TestUtils.CreatePaletteMapper(is4Bitimage).Map(images);
 		var exporter = TestUtils.CreateSpriteExporter(data);
 		var streamProvider = new MemoryStreamProvider();

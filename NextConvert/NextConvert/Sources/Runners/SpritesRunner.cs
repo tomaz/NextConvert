@@ -83,7 +83,7 @@ public class SpriteRunner : BaseRunner
 			ItemWidth = SpriteWidth,
 			ItemHeight = SpriteHeight,
 			IgnoreCopies = Globals.IgnoreCopies,
-			KeepBoxedTransparents = Globals.KeepBoxedTransparents,
+			KeepTransparents = Globals.KeepTransparents,
 		}
 		.Images(InputStreamProvider!)
 	);

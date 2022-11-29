@@ -93,7 +93,7 @@ public abstract class BaseRunner
 		Log.Verbose($"Transparent colour: {Globals.TransparentColour} (ARGB)");
 		Log.Verbose($"Bits per colour: {(Globals.Palette9Bit ? 9 : 8)}");
 		Log.Verbose($"Export palette count: {Globals.ExportPaletteCount}");
-		Log.Verbose($"Keep boxed transparents: {Globals.KeepBoxedTransparents}");
+		Log.Verbose($"Keep transparents: {Globals.KeepTransparents}");
 		Log.Verbose($"Ingore copies/mirrors/rotations: {Globals.IgnoreCopies}");
 
 		if (Globals.SheetStreamProvider != null)

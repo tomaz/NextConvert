@@ -3,8 +3,6 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-using System.Runtime.InteropServices;
-
 namespace NextConvert.Sources.ImageUtils;
 
 /// <summary>
@@ -13,12 +11,12 @@ namespace NextConvert.Sources.ImageUtils;
 public class ImageSplitter
 {
 	public Color TransparentColor { get; set; }
+	public KeepTransparentType KeepTransparents { get; set; } = KeepTransparentType.None;
 
 	public int ItemWidth { get; set; }
 	public int ItemHeight { get; set; }
 
 	public bool IgnoreCopies { get; set; }
-	public bool KeepBoxedTransparents { get; set; }
 
 	#region Public
 
@@ -44,11 +42,16 @@ public class ImageSplitter
 
 		// Now remove all transparent images.
 		var imagesWithoutTransparents = RemoveTransparent(images);
-		Log.Verbose($"Removed transparent, {imagesWithoutTransparents.Count} objects remaining");
+		switch (KeepTransparents)
+		{
+			case KeepTransparentType.All: Log.Verbose($"Keeping all transparents, remaining {imagesWithoutTransparents.Count} objects"); break;
+			case KeepTransparentType.None: Log.Verbose($"Removing all transparents, {imagesWithoutTransparents.Count} objects remaining"); break;
+			case KeepTransparentType.Boxed: Log.Verbose($"Removing boxed transparents, {imagesWithoutTransparents.Count} objects remaining"); break;
+		}
 
 		// Remove all copies.
 		var result = RemoveCopies(imagesWithoutTransparents);
-		if (IgnoreCopies) Log.Verbose($"Removed copies, {result.Count} objects remaining");
+		Log.Verbose(IgnoreCopies ? $"Ignoring copies, keeping all {result.Count} objects" : $"Removed copies, {result.Count} objects remaining");
 
 		return result;
 	}
@@ -126,46 +129,58 @@ public class ImageSplitter
 
 	private List<ImageData> RemoveTransparent(List<ImageData> images)
 	{
-		if (KeepBoxedTransparents)
+		switch (KeepTransparents)
 		{
-			// If we need to respect image positions, we only remove transparent images outside of the max X and Y (except in the last row where we always remove transparent images AFTER the last non-transparent).
-
-			// First detext maximum used coordinates of non-transparent images.
-			var maxUsedX = 0;
-			var maxUsedY = 0;
-			foreach (var image in images)
+			case KeepTransparentType.None:
 			{
-				if (image.IsTransparent) continue;
-				if (image.Position.X > maxUsedX) maxUsedX = image.Position.X;
-				if (image.Position.Y > maxUsedY) maxUsedY = image.Position.Y;
+				// Remove all transparent images.
+				return images.Where(i => !i.IsTransparent).ToList();
 			}
 
-			// Now selectively remove all transparent images outside the max coordinates. If this yields empty array, exit.
-			var filteredImages = images.Where(i => !i.IsTransparent || (i.Position.X <= maxUsedX && i.Position.Y <= maxUsedY)).ToList();
-			if (filteredImages.Count == 0) return new();
-
-			// Since we parse images from top to bottom and left to right, last images are always from the last used row. Therefore we can easily remove all remaining transparent images from the last row.
-			while (filteredImages.Count > 0)
+			case KeepTransparentType.All:
 			{
-				var image = filteredImages.Last();
-
-				// Exit once we reach rows below last.
-				if (image.Position.Y < maxUsedY) break;
-
-				// Exit as soon as we reach the first non-transparent image.
-				if (!image.IsTransparent) break;
-
-				// Otherwise remove the image and continue
-				filteredImages.RemoveAt(filteredImages.Count - 1);
+				// Keep all transparent images.
+				return images;
 			}
 
-			return filteredImages;
+			case KeepTransparentType.Boxed:
+			{
+				// Only remove transparent images outside of the max X and Y (except in the last row where we always remove transparent images AFTER the last non-transparent).
+
+				// First detext maximum used coordinates of non-transparent images.
+				var maxUsedX = 0;
+				var maxUsedY = 0;
+				foreach (var image in images)
+				{
+					if (image.IsTransparent) continue;
+					if (image.Position.X > maxUsedX) maxUsedX = image.Position.X;
+					if (image.Position.Y > maxUsedY) maxUsedY = image.Position.Y;
+				}
+
+				// Now selectively remove all transparent images outside the max coordinates. If this yields empty array, exit.
+				var filteredImages = images.Where(i => !i.IsTransparent || (i.Position.X <= maxUsedX && i.Position.Y <= maxUsedY)).ToList();
+				if (filteredImages.Count == 0) return new();
+
+				// Since we parse images from top to bottom and left to right, last images are always from the last used row. Therefore we can easily remove all remaining transparent images from the last row.
+				while (filteredImages.Count > 0)
+				{
+					var image = filteredImages.Last();
+
+					// Exit once we reach rows below last.
+					if (image.Position.Y < maxUsedY) break;
+
+					// Exit as soon as we reach the first non-transparent image.
+					if (!image.IsTransparent) break;
+
+					// Otherwise remove the image and continue
+					filteredImages.RemoveAt(filteredImages.Count - 1);
+				}
+
+				return filteredImages;
+			}
 		}
-		else
-		{
-			// If we don't have to respect image positions, we simply remove all transparent images.
-			return images.Where(i => !i.IsTransparent).ToList();
-		}
+
+		throw new NotImplementedException($"Unknown keep transparent option {KeepTransparents}");
 	}
 
 	private List<ImageData> RemoveCopies(List<ImageData> images)
@@ -185,6 +200,12 @@ public class ImageSplitter
 				}
 
 				var potentialCopy = images[k];
+
+				if (potentialCopy.IsTransparent)
+				{
+					// We ignore fully transparent images in this phase, we should've dealt with them in previous step.
+					continue;
+				}
 
 				if (potentialCopy.IsDuplicateOf(original))
 				{

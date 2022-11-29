@@ -1,22 +1,28 @@
-﻿using UnitTests.Helpers;
+﻿using NextConvert.Sources.Helpers;
+
+using UnitTests.Helpers;
 
 namespace UnitTests;
 
 public class PaletteMapperTests
 {
 	[Theory]
-	[InlineData(false, false, false)]
-	[InlineData(false, false, true)]
-	[InlineData(false, true, false)]
-	[InlineData(false, true, true)]
-	[InlineData(true, false, false)]
-	[InlineData(true, false, true)]
-	[InlineData(true, true, false)]
-	[InlineData(true, true, true)]
-	public void Sprites_ShouldMapAllColours(bool keepBoxedTransparents, bool ignoreCopies, bool is4BitImage)
+	[InlineData(KeepTransparentType.All, false, false)]
+	[InlineData(KeepTransparentType.All, false, true)]
+	[InlineData(KeepTransparentType.All, true, false)]
+	[InlineData(KeepTransparentType.All, true, true)]
+	[InlineData(KeepTransparentType.None, false, false)]
+	[InlineData(KeepTransparentType.None, false, true)]
+	[InlineData(KeepTransparentType.None, true, false)]
+	[InlineData(KeepTransparentType.None, true, true)]
+	[InlineData(KeepTransparentType.Boxed, false, false)]
+	[InlineData(KeepTransparentType.Boxed, false, true)]
+	[InlineData(KeepTransparentType.Boxed, true, false)]
+	[InlineData(KeepTransparentType.Boxed, true, true)]
+	public void Sprites_ShouldMapAllColours(KeepTransparentType keepTransparent, bool ignoreCopies, bool is4BitImage)
 	{
 		// setup
-		var images = TestUtils.CreateImageSplitter(keepBoxedTransparents, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
+		var images = TestUtils.CreateImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
 		var mapper = TestUtils.CreatePaletteMapper(is4BitImage);
 
 		// execute
@@ -28,18 +34,22 @@ public class PaletteMapperTests
 	}
 
 	[Theory]
-	[InlineData(false, false, false)]
-	[InlineData(false, false, true)]
-	[InlineData(false, true, false)]
-	[InlineData(false, true, true)]
-	[InlineData(true, false, false)]
-	[InlineData(true, false, true)]
-	[InlineData(true, true, false)]
-	[InlineData(true, true, true)]
-	public void Sprites_ShouldMapAllImages(bool keepBoxedTransparents, bool ignoreCopies, bool is4BitImage)
+	[InlineData(KeepTransparentType.All, false, false)]
+	[InlineData(KeepTransparentType.All, false, true)]
+	[InlineData(KeepTransparentType.All, true, false)]
+	[InlineData(KeepTransparentType.All, true, true)]
+	[InlineData(KeepTransparentType.None, false, false)]
+	[InlineData(KeepTransparentType.None, false, true)]
+	[InlineData(KeepTransparentType.None, true, false)]
+	[InlineData(KeepTransparentType.None, true, true)]
+	[InlineData(KeepTransparentType.Boxed, false, false)]
+	[InlineData(KeepTransparentType.Boxed, false, true)]
+	[InlineData(KeepTransparentType.Boxed, true, false)]
+	[InlineData(KeepTransparentType.Boxed, true, true)]
+	public void Sprites_ShouldMapAllImages(KeepTransparentType keepTransparent, bool ignoreCopies, bool is4BitImage)
 	{
 		// setup
-		var images = TestUtils.CreateImageSplitter(keepBoxedTransparents, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
+		var images = TestUtils.CreateImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
 		var mapper = TestUtils.CreatePaletteMapper(is4BitImage);
 
 		// execute
@@ -48,7 +58,7 @@ public class PaletteMapperTests
 		// verify
 		// note: we only check for counts, there's no simple way of checking all image indexes apart from reimplementing the whole colour mapping in tests or relying on yet another set of files from resources. We are covering indexes when testing `SpritesRunner` anyway).
 		// note: whether sprites are 4bit/8bit doesn't affect the number of sprites produced, only changes the palette.
-		var expected = ResourcesUtils.GetSpriteResultImages(keepBoxedTransparents, ignoreCopies);
+		var expected = ResourcesUtils.GetSpriteResultImages(keepTransparent, ignoreCopies);
 		Assert.Equal(expected.Count, data.Images.Count);
 	}
 }

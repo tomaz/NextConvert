@@ -19,10 +19,10 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 
 	public static readonly Option<string?> TransparentOption = new(name: "--transparent", description: "Transparent colour [optional for transparent png]");
 
+	public static readonly Option<string> KeepTransparentOption = new Option<string>(name: "--keep-transparent", description: "Specifies what kind of transparent images to keep").FromAmong("none", "boxed", "all");
+	public static readonly Option<bool> IgnoreCopiesOption = new(name: "--ignore-copies", description: "Ignore copies, rotated and mirrored images", getDefaultValue: () => false);
 	public static readonly Option<bool> Palette9BitOption = new(name: "--9bit-palette", description: "Use 9-bit palette instead of 8", getDefaultValue: () => false);
 	public static readonly Option<bool> ExportPaletteCountOption = new(name: "--export-palette-count", description: "Export palette count to the first byte of the file", getDefaultValue: () => false);
-	public static readonly Option<bool> IgnoreCopiesOption = new(name: "--ignore-copies", description: "Ignore copies, rotated and mirrored images", getDefaultValue: () => false);
-	public static readonly Option<bool> KeepBoxedTransparentsOption = new(name: "--keep-boxed-transparents", description: "Keep transparent images in the middle of image block", getDefaultValue: () => false);
 
 	#region Overrides
 
@@ -31,6 +31,7 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 		return new GlobalOptions
 		{
 			SheetStreamProvider = FileInfoStreamProvider.Create(bindingContext.ParseResult.GetValueForOption(SheetFilenameOption)),
+			KeepTransparents = bindingContext.ParseResult.GetValueForOption(KeepTransparentOption)?.ToKeepTransparentType() ?? KeepTransparentType.None,
 			TransparentColour = bindingContext.ParseResult.GetValueForOption(TransparentOption)?.ToColor() ?? Color.Transparent,
 			SheetBackgroundColour = bindingContext.ParseResult.GetValueForOption(SheetBackgroundOption)?.ToColor(),
 			SheetImagesPerRow = bindingContext.ParseResult.GetValueForOption(SheetImagesPerRowOption),
@@ -39,7 +40,6 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 			Palette9Bit = bindingContext.ParseResult.GetValueForOption(Palette9BitOption),
 			ExportPaletteCount = bindingContext.ParseResult.GetValueForOption(ExportPaletteCountOption),
 			IgnoreCopies = bindingContext.ParseResult.GetValueForOption(IgnoreCopiesOption),
-			KeepBoxedTransparents = bindingContext.ParseResult.GetValueForOption(KeepBoxedTransparentsOption)
 		};
 	}
 
@@ -49,6 +49,7 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 
 	public class GlobalOptions {
 		public IStreamProvider? SheetStreamProvider { get; set; }
+		public KeepTransparentType KeepTransparents { get; set; }
 		public Argb32 TransparentColour { get; set; } = Color.Transparent;
 		public Argb32? SheetBackgroundColour { get; set; }
 		public int SheetImagesPerRow { get; set; }
@@ -57,8 +58,37 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 		public bool Palette9Bit { get; set; }
 		public bool ExportPaletteCount { get; set; }
 		public bool IgnoreCopies { get; set; }
-		public bool KeepBoxedTransparents { get; set; }
 	}
 
 	#endregion
 }
+
+#region Declarations
+
+public enum KeepTransparentType
+{
+	/// <summary>
+	/// All fully transparent images will be removed.
+	/// </summary>
+	None,
+
+	/// <summary>
+	/// Transparent images within the bounding box of other images will be kept.
+	/// </summary>
+	Boxed,
+
+	/// <summary>
+	/// All transparent images will be kept.
+	/// </summary>
+	All
+};
+
+internal static class GlobalOptionsExtensions
+{
+	public static KeepTransparentType ToKeepTransparentType(this string value)
+	{
+		return Enum.TryParse(value: value, ignoreCase: true, out KeepTransparentType result) ? result : KeepTransparentType.None;
+	}
+}
+
+#endregion
