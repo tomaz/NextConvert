@@ -2,8 +2,6 @@
 using NextConvert.Sources.Helpers;
 using NextConvert.Sources.Runners;
 
-using SixLabors.ImageSharp;
-
 using System.CommandLine;
 using System.CommandLine.Parsing;
 
@@ -33,7 +31,6 @@ FileInfo? CreateExistingFileTestParseArgument(ArgumentResult result)
 Command CreateSpritesCommand()
 {
 	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument) { IsRequired = true };
-	var transparentOption = new Option<string?>(name: "--transparent", description: "Transparent colour [optional for transparent png]");
 	var spritesOptions = new Option<FileInfo?>(name: "--sprites", description: "Output raw sprites file [optional]");
 	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
 	var is4BitOption = new Option<bool>(name: "--4bit", description: "Generate 4-bit sprites", getDefaultValue: () => false);
@@ -41,13 +38,12 @@ Command CreateSpritesCommand()
 	var result = new Command("sprites", "Converts sprites source image")
 	{
 		inputOption,
-		transparentOption,
 		spritesOptions,
 		paletteOption,
 		is4BitOption,
 	};
 
-	result.SetHandler((input, transparent, sprites, palette, is4Bit, globalOptions) =>
+	result.SetHandler((input, sprites, palette, is4Bit, globalOptions) =>
 	{
 		// Run sprites runner.
 		Run(() => new SpriteRunner
@@ -56,12 +52,10 @@ Command CreateSpritesCommand()
 			InputStreamProvider = FileInfoStreamProvider.Create(input),
 			OutputSpritesStreamProvider = FileInfoStreamProvider.Create(sprites),
 			OutputPaletteStreamProvider = FileInfoStreamProvider.Create(palette),
-			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
 			IsSprite4Bit = is4Bit,
 		});
 	},
 	inputOption,
-	transparentOption,
 	spritesOptions,
 	paletteOption,
 	is4BitOption,
@@ -80,6 +74,7 @@ Command CreateRootCommand()
 	result.AddGlobalOption(GlobalOptionsBinder.SheetColoursPerRowOption);
 	result.AddGlobalOption(GlobalOptionsBinder.SheetScaleOption);
 
+	result.AddGlobalOption(GlobalOptionsBinder.TransparentOption);
 	result.AddGlobalOption(GlobalOptionsBinder.Palette9BitOption);
 	result.AddGlobalOption(GlobalOptionsBinder.ExportPaletteCountOption);
 	result.AddGlobalOption(GlobalOptionsBinder.IgnoreCopiesOption);

@@ -40,12 +40,17 @@ public class ImageSplitter
 	{
 		// First split the image into images of requested size.
 		var images = SplitImage(image);
+		Log.Verbose($"Split image into {images.Count} objects");
 
 		// Now remove all transparent images.
 		var imagesWithoutTransparents = RemoveTransparent(images);
+		Log.Verbose($"Removed transparent, {imagesWithoutTransparents.Count} objects remaining");
 
-		// Remove all copies. Note this might result in extra transparents that might 
-		return RemoveCopies(imagesWithoutTransparents);
+		// Remove all copies.
+		var result = RemoveCopies(imagesWithoutTransparents);
+		if (IgnoreCopies) Log.Verbose($"Removed copies, {result.Count} objects remaining");
+
+		return result;
 	}
 
 	#endregion

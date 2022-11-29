@@ -1,4 +1,6 @@
-﻿using SixLabors.ImageSharp;
+﻿using NextConvert.Sources.Helpers;
+
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace NextConvert.Sources.ImageUtils;
@@ -24,6 +26,8 @@ public class PaletteMapper
 
 	private IndexedData Colours8Bit(IEnumerable<ImageData> images)
 	{
+		Log.Verbose("Mapping as 8-bit palette");
+
 		var result = new IndexedData();
 
 		foreach (var image in images)
@@ -155,9 +159,16 @@ public class PaletteMapper
 		}
 
 		// Generate the palette.
+		Log.Verbose($"Mapping {images.Count()} images as 4-bit palette");
 		var indexedImages = IndexedImages(images);
+		Log.Verbose($"Detected {indexedImages.Sum(x => x.Colours.Count)} total colours");
 		var indexedBanks = MapImagesIntoBanks(indexedImages);
-		return MapBanksIntoPalette(indexedBanks);
+		var usedColoursCount = indexedBanks.Sum(x => x.Colours.Count);
+		Log.Verbose($"Merged into {indexedBanks.Count} colour banks with {usedColoursCount} distinct colours");
+		var result = MapBanksIntoPalette(indexedBanks);
+		var extraColoursCount = result.Colours.Count - usedColoursCount;
+		Log.Verbose($"Filled in {extraColoursCount} unused colours: {indexedBanks.Count} banks * {IndexedData.MaxColoursPerBank} colours = {result.Colours.Count} total ({usedColoursCount} used)");
+		return result;
 	}
 
 	#endregion

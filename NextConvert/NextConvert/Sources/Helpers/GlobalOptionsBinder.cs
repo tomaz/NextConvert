@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 using System.CommandLine;
 using System.CommandLine.Binding;
@@ -16,7 +17,9 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 	public static readonly Option<int> SheetColoursPerRowOption = new(name: "--sheet-palette-columns", description: "Number of colour columns for info sheet", getDefaultValue: () => 16);
 	public static readonly Option<int> SheetScaleOption = new(name: "--sheet-scale", description: "Info sheet image scale (1, 2, 3 etc) [optional]", getDefaultValue: () => 1);
 
-	public static readonly Option<bool> Palette9BitOption = new(name: "--9-bit-palette", description: "Use 9-bit palette instead of 8", getDefaultValue: () => false);
+	public static readonly Option<string?> TransparentOption = new(name: "--transparent", description: "Transparent colour [optional for transparent png]");
+
+	public static readonly Option<bool> Palette9BitOption = new(name: "--9bit-palette", description: "Use 9-bit palette instead of 8", getDefaultValue: () => false);
 	public static readonly Option<bool> ExportPaletteCountOption = new(name: "--export-palette-count", description: "Export palette count to the first byte of the file", getDefaultValue: () => false);
 	public static readonly Option<bool> IgnoreCopiesOption = new(name: "--ignore-copies", description: "Ignore copies, rotated and mirrored images", getDefaultValue: () => false);
 	public static readonly Option<bool> KeepBoxedTransparentsOption = new(name: "--keep-boxed-transparents", description: "Keep transparent images in the middle of image block", getDefaultValue: () => false);
@@ -28,6 +31,7 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 		return new GlobalOptions
 		{
 			SheetStreamProvider = FileInfoStreamProvider.Create(bindingContext.ParseResult.GetValueForOption(SheetFilenameOption)),
+			TransparentColour = bindingContext.ParseResult.GetValueForOption(TransparentOption)?.ToColor() ?? Color.Transparent,
 			SheetBackgroundColour = bindingContext.ParseResult.GetValueForOption(SheetBackgroundOption)?.ToColor(),
 			SheetImagesPerRow = bindingContext.ParseResult.GetValueForOption(SheetImagesPerRowOption),
 			SheetColoursPerRow = bindingContext.ParseResult.GetValueForOption(SheetColoursPerRowOption),
@@ -45,6 +49,7 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 
 	public class GlobalOptions {
 		public IStreamProvider? SheetStreamProvider { get; set; }
+		public Argb32 TransparentColour { get; set; } = Color.Transparent;
 		public Argb32? SheetBackgroundColour { get; set; }
 		public int SheetImagesPerRow { get; set; }
 		public int SheetColoursPerRow { get; set; }

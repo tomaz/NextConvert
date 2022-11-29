@@ -3,9 +3,6 @@ using NextConvert.Sources.Exporters;
 using NextConvert.Sources.Helpers;
 using NextConvert.Sources.ImageUtils;
 
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-
 namespace NextConvert.Sources.Runners;
 
 public class SpriteRunner : BaseRunner
@@ -36,9 +33,6 @@ public class SpriteRunner : BaseRunner
 		if (Globals.SheetStreamProvider != null) Log.Verbose($"{Globals.SheetStreamProvider}");
 		
 		Log.NewLine();
-		Log.Verbose("Options:");
-		Log.Verbose($"Transparent colour: {TransparentColor} (ARGB)");
-
 		DescribeGlobals();
 
 		Log.NewLine();
@@ -85,7 +79,7 @@ public class SpriteRunner : BaseRunner
 		onEndMessage: (result) => $"{result.Count} sprites detected",
 		task: () => new ImageSplitter
 		{
-			TransparentColor = TransparentColor!.Value,
+			TransparentColor = Globals.TransparentColour,
 			ItemWidth = SpriteWidth,
 			ItemHeight = SpriteHeight,
 			IgnoreCopies = Globals.IgnoreCopies,
@@ -99,7 +93,7 @@ public class SpriteRunner : BaseRunner
 		onEndMessage: (data) => $"{data.Colours.Count} colours mapped",
 		task: () => new PaletteMapper
 		{
-			TransparentColour = TransparentColor!.Value,
+			TransparentColour = Globals.TransparentColour,
 			Is4BitPalette = IsSprite4Bit
 		}
 		.Map(images)

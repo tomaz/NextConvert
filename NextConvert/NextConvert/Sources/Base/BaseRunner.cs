@@ -3,8 +3,6 @@
 using SixLabors.ImageSharp.PixelFormats;
 
 using System.Diagnostics;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.Serialization;
 
 namespace NextConvert.Sources.Base;
 
@@ -14,7 +12,6 @@ namespace NextConvert.Sources.Base;
 public abstract class BaseRunner
 {
 	public GlobalOptionsBinder.GlobalOptions Globals { get; set; } = new();
-	public Argb32? TransparentColor { get; set; }
 
 	#region Subclass
 
@@ -47,7 +44,7 @@ public abstract class BaseRunner
 	{
 		var watch = Stopwatch.StartNew();
 
-		if (Globals.SheetBackgroundColour == null) Globals.SheetBackgroundColour = TransparentColor;
+		if (Globals.SheetBackgroundColour == null) Globals.SheetBackgroundColour = Globals.TransparentColour;
 
 		OnDescribe();
 		OnValidate();
@@ -93,6 +90,7 @@ public abstract class BaseRunner
 	/// </summary>
 	protected void DescribeGlobals()
 	{
+		Log.Verbose($"Transparent colour: {Globals.TransparentColour} (ARGB)");
 		Log.Verbose($"Bits per colour: {(Globals.Palette9Bit ? 9 : 8)}");
 		Log.Verbose($"Export palette count: {Globals.ExportPaletteCount}");
 		Log.Verbose($"Keep boxed transparents: {Globals.KeepBoxedTransparents}");
