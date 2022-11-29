@@ -151,7 +151,7 @@ public class PaletteMapper
 				// Make sure to fill in remaining colours so that each bank is full. It doesn't matter which colour we add since images are already properly mapped, so we simply add transparent. However note that we mark it as non-transparent - that's only used when generating info sheet image; all colours marked as transparent will be have a check mark over them.
 				while (result.Colours.Count % IndexedBankData.MaxColours != 0)
 				{
-					result.Colours.Add(new IndexedData.Colour(TransparentColour, false));
+					result.Colours.Add(new IndexedData.Colour(TransparentColour, isTransparent: false, isUsed: false));
 				}
 			}
 

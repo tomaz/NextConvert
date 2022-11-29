@@ -129,6 +129,7 @@ public class SpriteRunner : BaseRunner
 		{
 			Data = data,
 
+			TransparentColour = Globals.TransparentColour,
 			BackgroundColour = Globals.SheetBackgroundColour!.Value,
 			Scale = Globals.SheetScale,
 

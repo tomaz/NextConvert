@@ -34,22 +34,24 @@ public class IndexedData
 		public byte As8BitColour { get; private set; }
 		public byte[] As9BitColour { get; private set; }
 		public bool IsTransparent { get; set; }
+		public bool IsUsed { get; set; } = true;
 
 		#region Initialization & Disposal
 
-		public Colour(Argb32 argb, bool isTransparent = false)
+		public Colour(Argb32 argb, bool isTransparent = false, bool isUsed = true)
 		{
 			AsArgb32 = argb;
 			As8BitColour = argb.As8BitColour();
 			As9BitColour = argb.As9BitColour();
 			IsTransparent = isTransparent;
+			IsUsed = isUsed;
 		}
 
 		#endregion
 
 		#region Overrides
 
-		public override string ToString() => $"0x{As9BitColour[0]:X2}{As9BitColour[1]:X2}{(IsTransparent ? "T" : "")}";
+		public override string ToString() => $"0x{As9BitColour[0]:X2}{As9BitColour[1]:X2}{(IsTransparent ? "T" : "")}{(IsUsed ? "" : "*")}";
 
 		#endregion
 

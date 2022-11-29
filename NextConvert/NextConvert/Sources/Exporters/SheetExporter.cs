@@ -17,6 +17,7 @@ public class SheetExporter
 	#region General parameters
 
 	public IndexedData? Data { get; set; }
+	public Argb32 TransparentColour { get; set; } = Color.Transparent;
 	public Argb32 BackgroundColour { get; set; } = Color.Transparent;
 
 	public int Scale { get; set; } = 1;
@@ -84,6 +85,8 @@ public class SheetExporter
 	private FontRenderer? FontRenderer { get; set; } = new(1);
 
 	private Argb32 BorderColour { get; set; }
+	private Argb32 UnusedMarkerColour { get; set; }
+	private Argb32 TransparentMarkerColour { get; set; }
 	private Argb32 IdentifierColour { get; set; }
 	private Argb32 IdentifierBackgroundColour { get; set; }
 
@@ -214,6 +217,12 @@ public class SheetExporter
 		var x = xStart;
 		var y = Spacing;
 
+		var unusedBrush = new PatternBrush(UnusedMarkerColour, Color.Transparent, new bool[,] {
+			{ true,  false, false },
+			{ false, true,  false },
+			{ false, false, true },
+		});
+
 		void DrawBorder()
 		{
 			context.Draw(BorderColour, 1, new RectangleF(
@@ -243,11 +252,13 @@ public class SheetExporter
 
 		void DrawColour(IndexedData.Colour colour)
 		{
-			context.Fill(colour.AsArgb32, new RectangleF(
+			var colourRectangle = new RectangleF(
 				x: Scaled(x + 1),
 				y: Scaled(HeaderHeight + y + 1),
 				width: Scaled(ColourWidth),
-				height: Scaled(ColourHeight)));
+				height: Scaled(ColourHeight));
+
+			context.Fill(colour.AsArgb32, colourRectangle);
 
 			if (colour.IsTransparent)
 			{
@@ -256,7 +267,7 @@ public class SheetExporter
 				var offset = Scaled(ColourHeight / 5);
 
 				context.DrawLines(
-					color: BorderColour,
+					color: TransparentMarkerColour,
 					thickness: 1,
 					points: new PointF[] {
 						new PointF(centerX - offset, centerY - offset),
@@ -264,12 +275,19 @@ public class SheetExporter
 					});
 
 				context.DrawLines(
-					color: BorderColour,
+					color: TransparentMarkerColour,
 					thickness: 1,
 					points: new PointF[] {
 						new PointF(centerX - offset, centerY + offset),
 						new PointF(centerX + offset, centerY - offset)
 					});
+			}
+
+			if (!colour.IsUsed)
+			{
+				context.Fill(
+					brush: unusedBrush,
+					shape: colourRectangle);
 			}
 		}
 
@@ -340,6 +358,10 @@ public class SheetExporter
 	private void PrepareColours()
 	{
 		BorderColour = BackgroundColour.IsDark() ? Color.White : Color.DarkSlateGray;
+
+		TransparentMarkerColour = TransparentColour.IsDark() ? Color.White : Color.Black;
+		UnusedMarkerColour = TransparentColour.IsDark() ? Color.Yellow : Color.Black;
+
 		IdentifierColour = BorderColour;
 		IdentifierBackgroundColour = BorderColour.WithAlpha(40);
 	}
