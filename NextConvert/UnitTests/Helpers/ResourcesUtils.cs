@@ -30,9 +30,9 @@ public static class ResourcesUtils
 
 	public static Image<Argb32> GetSpritesSourceImage() => Image.Load<Argb32>(Resources.Project_Sprites_Image);
 
-	public static Image<Argb32> GetSpriteResultImage(SpriteImage? index)
+	public static ImageData GetSpriteResultImage(SpriteImage? index)
 	{
-		return index switch
+		var image = index switch
 		{
 			null => Image.Load<Argb32>(Resources.export_sprites_image_transparent),
 			SpriteImage.Chequered => Image.Load<Argb32>(Resources.export_sprites_image0),
@@ -48,13 +48,20 @@ public static class ResourcesUtils
 			SpriteImage.Four => Image.Load<Argb32>(Resources.export_sprites_image10),
 			_ => throw new ArgumentException($"Index {index} is not valid!"),
 		};
+
+		return new ImageData
+		{
+			Image = image,
+			Position = Point.Empty,
+			IsTransparent = (index == null)
+		};
 	}
 
-	public static List<Image<Argb32>> GetSpriteResultImages(bool keepBoxedTransparents, bool ignoreCopies)
+	public static List<ImageData> GetSpriteResultImages(bool keepBoxedTransparents, bool ignoreCopies)
 	{
 		if (!keepBoxedTransparents && !ignoreCopies)
 		{
-			return new List<Image<Argb32>>()
+			return new List<ImageData>()
 			{
 				GetSpriteResultImage(SpriteImage.Chequered),
 				GetSpriteResultImage(SpriteImage.One),
@@ -73,7 +80,7 @@ public static class ResourcesUtils
 		}
 		else if (!keepBoxedTransparents && ignoreCopies)
 		{
-			return new List<Image<Argb32>>()
+			return new List<ImageData>()
 			{
 				GetSpriteResultImage(SpriteImage.Chequered),
 				GetSpriteResultImage(SpriteImage.One),
@@ -86,7 +93,7 @@ public static class ResourcesUtils
 		}
 		else if (keepBoxedTransparents && !ignoreCopies)
 		{
-			return new List<Image<Argb32>>()
+			return new List<ImageData>()
 			{
 				GetSpriteResultImage(SpriteImage.Chequered),
 				GetSpriteResultImage(SpriteImage.One),
@@ -106,7 +113,7 @@ public static class ResourcesUtils
 		}
 		else
 		{
-			return new List<Image<Argb32>>()
+			return new List<ImageData>()
 			{
 				GetSpriteResultImage(SpriteImage.Chequered),
 				GetSpriteResultImage(SpriteImage.One),
@@ -124,13 +131,13 @@ public static class ResourcesUtils
 	{
 		var result = new List<IndexedData.Colour>();
 
-		// We use colours from the sprite sheet to prepare the palette.
-		var image = Image.Load<Argb32>(Resources.export_sprites_sheet);
+		// We use colours from the sprite sheet to prepare the palette. Note this requires that both sheet images use the same setup when creating: 5 sprites per row, 8 colours per row etc.
+		var image = Image.Load<Argb32>(is4Bit ? Resources.export_sprites_sheet_4bit : Resources.export_sprites_sheet_8bit);
 		var background = GetSpritesSheetBackgroundColour();
 		var point = new Point(118, 29);
 		var delta = new Point(34, 29);
 
-		for (int y = 0; y < 5; y++)
+		for (int y = 0; y < 8; y++)
 		{
 			for (int x = 0; x < 8; x++)
 			{
@@ -138,10 +145,17 @@ public static class ResourcesUtils
 					x: point.X + x * delta.X,
 					y: point.Y + y * delta.Y);
 
-				var colour = image[p.X, p.Y];
-				var transparent = x == 0 && y == 0;
+				// Exit if reached below last pixel row.
+				if (point.Y >= image.Height) return result;
 
-				if (colour == background) break;
+				// Get colour at the pixel.
+				var colour = image[p.X, p.Y];
+
+				// Set transparent flag; for 8-bit it's just the first colour while for 4-bit every 16th (so every second line since we expect 8 columns in each row).
+				var transparent = is4Bit ? (x ==0 && y % 2 == 0) : (x == 0 && y == 0);
+
+				if (colour == background) return result;
+
 				result.Add(new IndexedData.Colour(colour, transparent));
 			}
 		}

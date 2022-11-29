@@ -36,16 +36,18 @@ Command CreateSpritesCommand()
 	var transparentOption = new Option<string?>(name: "--transparent", description: "Transparent colour [optional for transparent png]");
 	var spritesOptions = new Option<FileInfo?>(name: "--sprites", description: "Output raw sprites file [optional]");
 	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
+	var is4BitOption = new Option<bool>(name: "--4bit", description: "Generate 4-bit sprites", getDefaultValue: () => false);
 
 	var result = new Command("sprites", "Converts sprites source image")
 	{
 		inputOption,
 		transparentOption,
 		spritesOptions,
-		paletteOption
+		paletteOption,
+		is4BitOption,
 	};
 
-	result.SetHandler((input, transparent, sprites, palette, globalOptions) =>
+	result.SetHandler((input, transparent, sprites, palette, is4Bit, globalOptions) =>
 	{
 		// Run sprites runner.
 		Run(() => new SpriteRunner
@@ -55,12 +57,14 @@ Command CreateSpritesCommand()
 			OutputSpritesStreamProvider = FileInfoStreamProvider.Create(sprites),
 			OutputPaletteStreamProvider = FileInfoStreamProvider.Create(palette),
 			TransparentColor = transparent?.ToColor() ?? Color.Transparent,
+			IsSprite4Bit = is4Bit,
 		});
 	},
 	inputOption,
 	transparentOption,
 	spritesOptions,
 	paletteOption,
+	is4BitOption,
 	new GlobalOptionsBinder());
 
 	return result;

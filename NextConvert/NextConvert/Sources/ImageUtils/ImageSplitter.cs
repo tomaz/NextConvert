@@ -25,7 +25,7 @@ public class ImageSplitter
 	/// <summary>
 	/// Returns the list of all items from the assigned image. Items are always parsed in left-to-right and top-to-bottom order. Fully transparent items are skipped.
 	/// </summary>
-	public List<Image<Argb32>> Images(IStreamProvider streamProvider)
+	public List<ImageData> Images(IStreamProvider streamProvider)
 	{
 		using (var image = Image.Load<Argb32>(streamProvider.GetStream(FileMode.Open)))
 		{
@@ -36,7 +36,7 @@ public class ImageSplitter
 	/// <summary>
 	/// Returns the list of all items from the assigned image. Items are always parsed in left-to-right and top-to-bottom order. Fully transparent items are skipped.
 	/// </summary>
-	public List<Image<Argb32>> Split(Image<Argb32> image)
+	public List<ImageData> Split(Image<Argb32> image)
 	{
 		// First split the image into images of requested size.
 		var images = SplitImage(image);
@@ -45,10 +45,7 @@ public class ImageSplitter
 		var imagesWithoutTransparents = RemoveTransparent(images);
 
 		// Remove all copies. Note this might result in extra transparents that might 
-		var imagesWithoutCopies = RemoveCopies(imagesWithoutTransparents);
-
-		// Returns just the images.
-		return imagesWithoutCopies.Select(i => i.Image).ToList();
+		return RemoveCopies(imagesWithoutTransparents);
 	}
 
 	#endregion
@@ -72,8 +69,7 @@ public class ImageSplitter
 				result.Add(new ImageData
 				{
 					Image = image,
-					X = i,
-					Y = imageY,
+					Position = new Point(i, imageY),
 					IsTransparent = false	// we don't yet have data copied into image so can't detect transparency
 				});
 			}
@@ -83,13 +79,13 @@ public class ImageSplitter
 
 		image.ProcessPixelRows(accessor =>
 		{
-			var imageY = 0;
+			var yPosition = 0;
 
 			// Handle all item rows.
 			for (int yBase = 0; yBase < accessor.Height; yBase += ItemHeight)
 			{
 				// Prepare the new row of items.
-				var itemsRow = CreateRowOfItemImages(image.Width, imageY);
+				var itemsRow = CreateRowOfItemImages(image.Width, yPosition);
 
 				// Handle each pixel row of the items.
 				for (int yOffs = 0; yOffs < ItemHeight; yOffs++)
@@ -116,7 +112,7 @@ public class ImageSplitter
 
 				// Add all items to the resulting list.
 				result.AddRange(itemsRow);
-				imageY++;
+				yPosition++;
 			}
 		});
 
@@ -135,12 +131,12 @@ public class ImageSplitter
 			foreach (var image in images)
 			{
 				if (image.IsTransparent) continue;
-				if (image.X > maxUsedX) maxUsedX = image.X;
-				if (image.Y > maxUsedY) maxUsedY = image.Y;
+				if (image.Position.X > maxUsedX) maxUsedX = image.Position.X;
+				if (image.Position.Y > maxUsedY) maxUsedY = image.Position.Y;
 			}
 
 			// Now selectively remove all transparent images outside the max coordinates. If this yields empty array, exit.
-			var filteredImages = images.Where(i => !i.IsTransparent || (i.X <= maxUsedX && i.Y <= maxUsedY)).ToList();
+			var filteredImages = images.Where(i => !i.IsTransparent || (i.Position.X <= maxUsedX && i.Position.Y <= maxUsedY)).ToList();
 			if (filteredImages.Count == 0) return new();
 
 			// Since we parse images from top to bottom and left to right, last images are always from the last used row. Therefore we can easily remove all remaining transparent images from the last row.
@@ -149,7 +145,7 @@ public class ImageSplitter
 				var image = filteredImages.Last();
 
 				// Exit once we reach rows below last.
-				if (image.Y < maxUsedY) break;
+				if (image.Position.Y < maxUsedY) break;
 
 				// Exit as soon as we reach the first non-transparent image.
 				if (!image.IsTransparent) break;
@@ -224,152 +220,6 @@ public class ImageSplitter
 		}
 
 		return images;
-	}
-
-	#endregion
-
-	#region Declarations
-
-	private class ImageData
-	{
-#pragma warning disable CS8618	// image is always assigned, #pragma just prevents unnecessary warning without having to create a constructor
-		public Image<Argb32> Image { get; set; }
-#pragma warning restore CS8618
-
-		public int X { get; set; }
-		public int Y { get; set; }
-		public bool IsTransparent { get; set; }
-
-		public override string ToString() => $"({X},{Y}) {(IsTransparent ? "T" : "")}";
-
-		public bool IsDuplicateOf(ImageData other)
-		{
-			for (int y = 0; y < Image.Height; y++)
-			{
-				for (int x = 0; x < Image.Width; x++)
-				{
-					if (Image[x, y] != other.Image[x, y]) return false;
-				}
-			}
-
-			return true;
-		}
-
-		public bool IsHorizontalMirrorOf(ImageData other)
-		{
-			/* +---+---+---+    +---+---+---+
-			 * | 1 | 2 | 3 |    | 3 | 2 | 1 |
-			 * +---+---+---+    +---+---+---+
-			 * | 4 | 5 | 6 | => | 6 | 5 | 4 |
-			 * +---+---+---+    +---+---+---+
-			 * | 7 | 8 | 9 |    | 9 | 8 | 7 |
-			 * +---+---+---+    +---+---+---+
-			 */
-			var lastX = Image.Width - 1;
-
-			for (int y = 0; y < Image.Height; y++)
-			{
-				for (int x = 0; x < Image.Width; x++)
-				{
-					if (Image[x, y] != other.Image[lastX - x, y]) return false;
-				}
-			}
-
-			return true;
-		}
-
-		public bool IsVerticalMirrorOf(ImageData other)
-		{
-			/* +---+---+---+    +---+---+---+
-			 * | 1 | 2 | 3 |    | 7 | 8 | 9 |
-			 * +---+---+---+    +---+---+---+
-			 * | 4 | 5 | 6 | => | 4 | 5 | 6 |
-			 * +---+---+---+    +---+---+---+
-			 * | 7 | 8 | 9 |    | 1 | 2 | 3 |
-			 * +---+---+---+    +---+---+---+
-			 */
-			var lastY = Image.Height - 1;
-
-			for (int y = 0; y < Image.Height; y++)
-			{
-				for (int x = 0; x < Image.Width; x++)
-				{
-					if (Image[x, y] != other.Image[x, lastY - y]) return false;
-				}
-			}
-
-			return true;
-		}
-
-		public bool Is90CWRotationOf(ImageData other)
-		{
-			/* +---+---+---+    +---+---+---+
-			 * | 1 | 2 | 3 |    | 7 | 4 | 1 |
-			 * +---+---+---+    +---+---+---+
-			 * | 4 | 5 | 6 | => | 8 | 5 | 2 |
-			 * +---+---+---+    +---+---+---+
-			 * | 7 | 8 | 9 |    | 9 | 6 | 3 |
-			 * +---+---+---+    +---+---+---+
-			 */
-			var lastY = Image.Height - 1;
-
-			for (int y = 0; y < Image.Height; y++)
-			{
-				for (int x = 0; x < Image.Width; x++)
-				{
-					if (Image[x, y] != other.Image[lastY - y, x]) return false;
-				}
-			}
-
-			return true;
-		}
-
-		public bool Is90CCWRotationOf(ImageData other)
-		{
-			/* +---+---+---+    +---+---+---+
-			 * | 1 | 2 | 3 |    | 3 | 6 | 9 |
-			 * +---+---+---+    +---+---+---+
-			 * | 4 | 5 | 6 | => | 2 | 5 | 8 |
-			 * +---+---+---+    +---+---+---+
-			 * | 7 | 8 | 9 |    | 1 | 4 | 7 |
-			 * +---+---+---+    +---+---+---+
-			 */
-			var lastX = Image.Width - 1;
-
-			for (int y = 0; y < Image.Height; y++)
-			{
-				for (int x = 0; x < Image.Width; x++)
-				{
-					if (Image[x, y] != other.Image[y, lastX - x]) return false;
-				}
-			}
-
-			return true;
-		}
-
-		public bool Is180RotationOf(ImageData other)
-		{
-			/* +---+---+---+    +---+---+---+
-			 * | 1 | 2 | 3 |    | 9 | 8 | 7 |
-			 * +---+---+---+    +---+---+---+
-			 * | 4 | 5 | 6 | => | 6 | 5 | 4 |
-			 * +---+---+---+    +---+---+---+
-			 * | 7 | 8 | 9 |    | 3 | 2 | 1 |
-			 * +---+---+---+    +---+---+---+
-			 */
-			var lastX = Image.Width - 1;
-			var lastY = Image.Height - 1;
-
-			for (int y = 0; y < Image.Height; y++)
-			{
-				for (int x = 0; x < Image.Width; x++)
-				{
-					if (Image[x, y] != other.Image[lastX - x, lastY - y]) return false;
-				}
-			}
-
-			return true;
-		}
 	}
 
 	#endregion

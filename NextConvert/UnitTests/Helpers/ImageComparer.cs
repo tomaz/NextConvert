@@ -1,13 +1,12 @@
-﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+﻿using NextConvert.Sources.ImageUtils;
 
 using System.Diagnostics.CodeAnalysis;
 
 namespace UnitTests.Helpers;
 
-public class ImageComparer : IEqualityComparer<Image<Argb32>>
+public class ImageComparer : IEqualityComparer<ImageData>
 {
-	public bool Equals(Image<Argb32>? a, Image<Argb32>? b)
+	public bool Equals(ImageData? a, ImageData? b)
 	{
 		if (a == null && b == null) return true;
 		if (a == null || b == null) return false;
@@ -26,7 +25,7 @@ public class ImageComparer : IEqualityComparer<Image<Argb32>>
 		return true;
 	}
 
-	public int GetHashCode([DisallowNull] Image<Argb32> obj)
+	public int GetHashCode([DisallowNull] ImageData obj)
 	{
 		return obj.GetHashCode();
 	}

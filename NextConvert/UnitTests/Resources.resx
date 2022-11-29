@@ -154,8 +154,11 @@
   <data name="export_sprites_image_transparent" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\export-sprites-image-transparent.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="export_sprites_sheet" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\export-sprites-sheet.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="export_sprites_sheet_4bit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export-sprites-sheet-4bit.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="export_sprites_sheet_8bit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export-sprites-sheet-8bit.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="Project_Sprites_Image" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Project-Sprites-Image.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

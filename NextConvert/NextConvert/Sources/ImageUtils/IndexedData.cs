@@ -1,5 +1,9 @@
 ﻿using SixLabors.ImageSharp.PixelFormats;
 
+using System.Data;
+
+using static NextConvert.Sources.ImageUtils.IndexedData;
+
 namespace NextConvert.Sources.ImageUtils;
 
 /// <summary>
@@ -7,6 +11,11 @@ namespace NextConvert.Sources.ImageUtils;
 /// </summary>
 public class IndexedData
 {
+	/// <summary>
+	/// Maximum number of colours per bank when 4-bit images are used.
+	/// </summary>
+	public const int MaxColoursPerBank = 16;
+
 	/// <summary>
 	/// The colour palette.
 	/// </summary>
@@ -16,25 +25,6 @@ public class IndexedData
 	/// Images with indexes into the <see cref="Colours"/>.
 	/// </summary>
 	public List<Image> Images { get; } = new();
-
-	#region Public
-
-	/// <summary>
-	/// Adds the given color to the end of the list if it's not present in the list yet. Either way, returns the index of existing colour if match was found, or the index of newly added colour if distinct.
-	/// </summary>
-	public int AddIfDistinct(Argb32 colour, bool isTransparent)
-	{
-		var indexedColour = new Colour(colour, isTransparent);
-
-		var index = Colours.FindIndex(c => c.IsSameColour(indexedColour));
-		if (index >= 0) return index;
-		
-		Colours.Add(indexedColour);
-
-		return Colours.Count - 1;
-	}
-
-	#endregion
 
 	#region Declarations
 
@@ -81,19 +71,43 @@ public class IndexedData
 	/// </summary>
 	public class Image
 	{
-		public int Width { get; private set; }
-		public int Height { get; private set; }
+		/// <summary>
+		/// Underlying source image, can be used to get more information like source position etc.
+		/// </summary>
+		public ImageData SourceImage { get; }
+
+		public int PaletteBankOffset { get; set; } = 0;
+		public int Width { get => SourceImage.Width; }
+		public int Height { get => SourceImage.Height; }
 
 		private byte[,] data;
 
 		#region Initialization & Disposal
 
-		public Image(int width, int height)
+		public Image(ImageData image)
 		{
-			Width = width;
-			Height = height;
-			data = new byte[height, width];
+			SourceImage = image;
+			data = new byte[image.Height, image.Width];
 		}
+
+		public Image(Image copy) : this(copy.SourceImage)
+		{
+			PaletteBankOffset = copy.PaletteBankOffset;
+
+			for (int y = 0; y < copy.Height; y++)
+			{
+				for (int x = 0; x < copy.Width; x++)
+				{
+					data[y, x] = copy.data[y, x];
+				}
+			}
+		}
+
+		#endregion
+
+		#region Overrides
+
+		public override string ToString() => $"({SourceImage.Position.X},{SourceImage.Position.Y}) top-left pixel ({SourceImage.Position.X * Width},{SourceImage.Position.Y * Height})";
 
 		#endregion
 
@@ -104,8 +118,28 @@ public class IndexedData
 		/// </summary>
 		public byte this[int x, int y]
 		{
+			// Note: coordinates are reversed in underlying array so that we get line by line representation
 			get => data[y, x];
 			set => data[y, x] = value;
+		}
+
+		/// <summary>
+		/// Remaps the image by changing the given source colour index into the given destination index.
+		/// </summary>
+		public void RemapColour(byte source, byte destination)
+		{
+			if (source == destination) return;
+
+			for (int y = 0; y < Height; y++)
+			{
+				for (int x = 0; x < Width; x++)
+				{
+					if (this[x, y] == source)
+					{
+						this[x, y] = destination;
+					}
+				}
+			}
 		}
 
 		#endregion
@@ -116,8 +150,40 @@ public class IndexedData
 
 #region Extensions
 
-internal static class IndexedDataExtensions
+public static class IndexedDataExtensions
 {
+	/// <summary>
+	/// Checks if the given colour is already present in the list; if so, it returns the index of the colour. Otherwise it adds the colour to the end of the list and returns the new index.
+	/// </summary>
+	/// <remarks>
+	/// Note: distinct colours are determined based on ZX Next 3-bit per component palette. This ensures the colours will match exactly the ones on Next, however we can lose precision since for example 3-bit per RGB component colours take only a small subset of 8-bit RGB counterparts.
+	/// </remarks>
+	public static int AddIfDistinct(this List<Colour> colours, Argb32 colour, bool isTransparent = false)
+	{
+		return AddIfDistinct(colours, new Colour(colour, isTransparent));
+	}
+
+	/// <summary>
+	/// Checks if the given colour is already present in the list; if so, it returns the index of the colour. Otherwise it adds the colour to the end of the list and returns the new index.
+	/// </summary>
+	public static int AddIfDistinct(this List<Colour> colours, Colour colour)
+	{
+		var index = FindMatching(colours, colour);
+		if (index >= 0) return index;
+
+		colours.Add(colour);
+
+		return colours.Count - 1;
+	}
+
+	/// <summary>
+	/// Finds a matching existing colour and returns its index, or -1 if the colour is distinct and no match was found.
+	/// </summary>
+	public static int FindMatching(this List<Colour> colours, Colour colour)
+	{
+		return colours.FindIndex(c => c.IsSameColour(colour));
+	}
+
 	internal static byte[] As9BitColour(this Argb32 colour)
 	{
 		var r = colour.R.Component(3);

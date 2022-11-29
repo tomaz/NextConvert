@@ -155,7 +155,7 @@ public class SheetExporter
 				height: Scaled(HeaderHeight)));
 
 			// Render image index.
-			FontRenderer.DrawText(
+			FontRenderer?.DrawText(
 				context: context, 
 				text: index.ToString(), 
 				color: IdentifierColour, 
@@ -170,7 +170,8 @@ public class SheetExporter
 			{
 				for (int ix = 0; ix < image.Width; ix++)
 				{
-					var colourIndex = image[ix, iy];
+					var rawIndex = image[ix, iy];
+					var colourIndex = rawIndex + image.PaletteBankOffset * IndexedData.MaxColoursPerBank;
 					var colour = Data!.Colours[colourIndex];
 
 					context.Fill(colour.AsArgb32, new RectangleF(
@@ -232,7 +233,7 @@ public class SheetExporter
 				height: Scaled(HeaderHeight)));
 
 			// Render colour index.
-			FontRenderer.DrawText(
+			FontRenderer?.DrawText(
 				context: context,
 				text: index.ToString(),
 				color: IdentifierColour,
@@ -284,14 +285,14 @@ public class SheetExporter
 			{
 				var values = colour.As9BitColour;
 
-				FontRenderer.DrawText(
+				FontRenderer?.DrawText(
 					context: context,
 					text: values[0].ToString("X2"),
 					color: BorderColour,
 					x: Scaled(left),
 					y: Scaled(top));
 
-				FontRenderer.DrawText(
+				FontRenderer?.DrawText(
 					context: context,
 					text: values[1].ToString("X2"),
 					color: BorderColour,
@@ -300,7 +301,7 @@ public class SheetExporter
 			}
 			else
 			{
-				FontRenderer.DrawText(
+				FontRenderer?.DrawText(
 					context: context,
 					text: colour.As8BitColour.ToString("X2"),
 					color: BorderColour,

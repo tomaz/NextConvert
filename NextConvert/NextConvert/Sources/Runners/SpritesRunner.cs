@@ -17,7 +17,7 @@ public class SpriteRunner : BaseRunner
 	public IStreamProvider? OutputSpritesStreamProvider { get; set; }
 	public IStreamProvider? OutputPaletteStreamProvider { get; set; }
 
-	private bool IsSprite4Bit { get; set; } = false;		// not possible to change right now, but we use this option in several places, so keeping it as placeholder
+	public bool IsSprite4Bit { get; set; } = false;
 
 	#region Overrides
 
@@ -80,7 +80,7 @@ public class SpriteRunner : BaseRunner
 
 	#region Helpers
 
-	private List<Image<Argb32>> SplitImage() => RunTask(
+	private List<ImageData> SplitImage() => RunTask(
 		onStartMessage: "Parsing sprites",
 		onEndMessage: (result) => $"{result.Count} sprites detected",
 		task: () => new ImageSplitter
@@ -94,7 +94,7 @@ public class SpriteRunner : BaseRunner
 		.Images(InputStreamProvider!)
 	);
 
-	private IndexedData MapImages(List<Image<Argb32>> images) => RunTask(
+	private IndexedData MapImages(List<ImageData> images) => RunTask(
 		onStartMessage: "Mapping colours",
 		onEndMessage: (data) => $"{data.Colours.Count} colours mapped",
 		task: () => new PaletteMapper

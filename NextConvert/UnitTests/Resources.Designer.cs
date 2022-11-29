@@ -183,9 +183,19 @@ namespace UnitTests {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] export_sprites_sheet {
+        internal static byte[] export_sprites_sheet_4bit {
             get {
-                object obj = ResourceManager.GetObject("export_sprites_sheet", resourceCulture);
+                object obj = ResourceManager.GetObject("export_sprites_sheet_4bit", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] export_sprites_sheet_8bit {
+            get {
+                object obj = ResourceManager.GetObject("export_sprites_sheet_8bit", resourceCulture);
                 return ((byte[])(obj));
             }
         }

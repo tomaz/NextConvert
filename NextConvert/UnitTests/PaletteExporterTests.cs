@@ -17,7 +17,7 @@ public class PaletteExporterTests
 	{
 		// setup
 		var images = TestUtils.CreateImageSplitter().Split(ResourcesUtils.GetSpritesSourceImage());
-		var data = TestUtils.CreatePaletteMapper().Map(images);
+		var data = TestUtils.CreatePaletteMapper(is4BitImage).Map(images);
 		var exporter = TestUtils.CreatePaletteExporter(data, is9BitColour, isCountExported);
 		var streamProvider = new MemoryStreamProvider();
 
