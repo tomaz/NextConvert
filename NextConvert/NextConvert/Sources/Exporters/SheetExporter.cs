@@ -61,7 +61,7 @@ public class SheetExporter
 	/// <summary>
 	/// Width of a colour rectangle.
 	/// </summary>
-	public int ColourWidth { get; set; } = 16;
+	public int ColourWidth { get; set; } = 17;
 
 	/// <summary>
 	/// Height of the colour rectangle.
@@ -373,7 +373,7 @@ public class SheetExporter
 			// Note: font sizes are automatically adjusted for scale, so we need to compensate when calculating!
 			if (!ColourShowValue) return 0;
 
-			ColourByteSize = FontRenderer.MeasureText("88");
+			ColourByteSize = FontRenderer?.MeasureText("88") ?? Size.Empty;
 			if (ColourByteSize == Size.Empty) return 0;
 
 			var byteWidth = ColourByteSize.Width / Scale;
@@ -398,7 +398,7 @@ public class SheetExporter
 
 	private int CalculateImageHeight()
 	{
-		HeaderHeight = FontRenderer.Enabled ? 12 : 0;
+		HeaderHeight = FontRenderer!.Enabled ? 12 : 0;
 
 		var itemRows = (int)Math.Ceiling((double)Data!.Images.Count / (double)ItemsPerRow);
 		var itemRowHeight = ItemHeight + ItemSpacing + HeaderHeight;
