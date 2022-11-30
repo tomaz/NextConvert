@@ -203,9 +203,79 @@ namespace UnitTests {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] export_tiles_image0 {
+            get {
+                object obj = ResourceManager.GetObject("export_tiles_image0", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] export_tiles_image1 {
+            get {
+                object obj = ResourceManager.GetObject("export_tiles_image1", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] export_tiles_image2 {
+            get {
+                object obj = ResourceManager.GetObject("export_tiles_image2", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] export_tiles_image3 {
+            get {
+                object obj = ResourceManager.GetObject("export_tiles_image3", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] export_tiles_image4 {
+            get {
+                object obj = ResourceManager.GetObject("export_tiles_image4", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] export_tiles_sheet {
+            get {
+                object obj = ResourceManager.GetObject("export_tiles_sheet", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] Project_Sprites_Image {
             get {
                 object obj = ResourceManager.GetObject("Project_Sprites_Image", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Project_Tiles_Image {
+            get {
+                object obj = ResourceManager.GetObject("Project_Tiles_Image", resourceCulture);
                 return ((byte[])(obj));
             }
         }

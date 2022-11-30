@@ -16,4 +16,9 @@ public class MemoryStreamProvider : IStreamProvider
 	{
 		return Stream;
 	}
+
+	public Stream GetNumberedStream(int number, FileMode fileMode = FileMode.Create)
+	{
+		return Stream;
+	}
 }

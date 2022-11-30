@@ -160,7 +160,28 @@
   <data name="export_sprites_sheet_8bit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\export-sprites-sheet-8bit.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="export_tiles_image0" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export-tiles-image0.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="export_tiles_image1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export-tiles-image1.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="export_tiles_image2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export-tiles-image2.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="export_tiles_image3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export-tiles-image3.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="export_tiles_image4" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export-tiles-image4.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="export_tiles_sheet" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\export_tiles_sheet.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="Project_Sprites_Image" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Project-Sprites-Image.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Project_Tiles_Image" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Project-Tiles-Image.bmp;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

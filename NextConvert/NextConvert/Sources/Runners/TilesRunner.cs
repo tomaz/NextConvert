@@ -5,33 +5,31 @@ using NextConvert.Sources.ImageUtils;
 
 namespace NextConvert.Sources.Runners;
 
-public class SpriteRunner : BaseRunner
+public class TilesRunner : BaseRunner
 {
-	private const int SpriteWidth = 16;
-	private const int SpriteHeight = 16;
+	private const int TileWidth = 8;
+	private const int TileHeight = 8;
 
 	public IStreamProvider? InputStreamProvider { get; set; }
-	public IStreamProvider? OutputSpritesStreamProvider { get; set; }
+	public IStreamProvider? OutputTilesStreamProvider { get; set; }
 	public IStreamProvider? OutputPaletteStreamProvider { get; set; }
-
-	public bool IsSprite4Bit { get; set; } = false;
 
 	#region Overrides
 
 	protected override void OnDescribe()
 	{
-		Log.Info("Converting sprites");
+		Log.Info("Converting tiles");
 
 		Log.NewLine();
 		Log.Verbose("Will parse:");
 		Log.Verbose($"{InputStreamProvider}");
-		
+
 		Log.NewLine();
 		Log.Verbose("Will generate:");
-		if (OutputSpritesStreamProvider != null) Log.Verbose($"{OutputSpritesStreamProvider}");
+		if (OutputTilesStreamProvider != null) Log.Verbose($"{OutputTilesStreamProvider}");
 		if (OutputPaletteStreamProvider != null) Log.Verbose($"{OutputPaletteStreamProvider}");
 		if (Globals.SheetStreamProvider != null) Log.Verbose($"{Globals.SheetStreamProvider}");
-		
+
 		Log.NewLine();
 		DescribeGlobals();
 
@@ -43,7 +41,7 @@ public class SpriteRunner : BaseRunner
 		base.OnValidate();
 
 		// At least some output should be provided in order to make sense in running anything.
-		if (OutputSpritesStreamProvider == null && OutputPaletteStreamProvider == null && Globals.SheetStreamProvider == null)
+		if (OutputTilesStreamProvider == null && OutputPaletteStreamProvider == null && Globals.SheetStreamProvider == null)
 		{
 			throw new ArgumentException("Either output or palette file should be provided");
 		}
@@ -54,9 +52,9 @@ public class SpriteRunner : BaseRunner
 		var images = SplitImage();
 		var data = MapImages(images);
 
-		if (OutputSpritesStreamProvider != null)
+		if (OutputTilesStreamProvider != null)
 		{
-			CreateSpritesFile(data);
+			CreateTilesFile(data);
 		}
 
 		if (OutputPaletteStreamProvider != null)
@@ -75,15 +73,15 @@ public class SpriteRunner : BaseRunner
 	#region Helpers
 
 	private List<ImageData> SplitImage() => RunTask(
-		onStartMessage: "Parsing sprites",
-		onEndMessage: (result) => $"{result.Count} sprites detected",
+		onStartMessage: "Parsing tiles",
+		onEndMessage: (result) => $"{result.Count} tiles detected",
 		task: () => new ImageSplitter
 		{
 			TransparentColor = Globals.TransparentColour,
-			ItemWidth = SpriteWidth,
-			ItemHeight = SpriteHeight,
-			IgnoreCopies = Globals.IgnoreCopies,
 			KeepTransparents = Globals.KeepTransparents,
+			ItemWidth = TileWidth,
+			ItemHeight = TileHeight,
+			IgnoreCopies = Globals.IgnoreCopies,
 		}
 		.Images(InputStreamProvider!)
 	);
@@ -94,20 +92,20 @@ public class SpriteRunner : BaseRunner
 		task: () => new PaletteMapper
 		{
 			TransparentColour = Globals.TransparentColour,
-			Is4BitPalette = IsSprite4Bit
+			Is4BitPalette = true
 		}
 		.Map(images)
 	);
 
-	private void CreateSpritesFile(IndexedData data) => RunTask(
+	private void CreateTilesFile(IndexedData data) => RunTask(
 		onStartMessage: "Exporting sprites",
-		onEndMessage: () => $"Exported {OutputSpritesStreamProvider}",
+		onEndMessage: () => $"Exported {OutputTilesStreamProvider}",
 		task: () => new ImageExporter
 		{
 			Data = data,
-			Is4BitColour = IsSprite4Bit,
+			Is4BitColour = true,
 		}
-		.Export(OutputSpritesStreamProvider!)
+		.Export(OutputTilesStreamProvider!)
 	);
 
 	private void CreatePaletteFile(IndexedData data) => RunTask(
@@ -123,7 +121,7 @@ public class SpriteRunner : BaseRunner
 	);
 
 	private void CreateInfoSheet(IndexedData data) => RunTask(
-		onStartMessage: "Exporting spritesheet",
+		onStartMessage: "Exporting tile-sheet",
 		onEndMessage: () => $"Exported {Globals.SheetStreamProvider}",
 		task: () => new SheetExporter
 		{
@@ -133,13 +131,13 @@ public class SpriteRunner : BaseRunner
 			BackgroundColour = Globals.SheetBackgroundColour!.Value,
 			Scale = Globals.SheetScale,
 
-			ItemWidth = SpriteWidth,
-			ItemHeight = SpriteHeight,
+			ItemWidth = TileWidth * 2,		// we need more space than tile itself otherwise indexes will not fit
+			ItemHeight = TileHeight * 2,	// same with height
 			ItemsPerRow = Globals.SheetImagesPerRow,
 			ColoursPerRow = Globals.SheetColoursPerRow,
 
 			IsPalette9Bit = Globals.Palette9Bit,
-			Is4BitColour = IsSprite4Bit,
+			Is4BitColour = true,
 
 			ExportIndividualImages = Globals.ExportIndividualImages,
 		}

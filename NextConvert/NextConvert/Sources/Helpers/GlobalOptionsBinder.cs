@@ -18,11 +18,13 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 	public static readonly Option<int> SheetScaleOption = new(name: "--sheet-scale", description: "Info sheet image scale (1, 2, 3 etc) [optional]", getDefaultValue: () => 1);
 
 	public static readonly Option<string?> TransparentOption = new(name: "--transparent", description: "Transparent colour [optional for transparent png]");
-
 	public static readonly Option<string> KeepTransparentOption = new Option<string>(name: "--keep-transparent", description: "Specifies what kind of transparent images to keep").FromAmong("none", "boxed", "all");
 	public static readonly Option<bool> IgnoreCopiesOption = new(name: "--ignore-copies", description: "Ignore copies, rotated and mirrored images", getDefaultValue: () => false);
+
 	public static readonly Option<bool> Palette9BitOption = new(name: "--9bit-palette", description: "Use 9-bit palette instead of 8", getDefaultValue: () => false);
 	public static readonly Option<bool> ExportPaletteCountOption = new(name: "--export-palette-count", description: "Export palette count to the first byte of the file", getDefaultValue: () => false);
+
+	public static readonly Option<bool> ExportIndividualImagesOption = new(name: "--export-images", description: "Export all individual images", getDefaultValue: () => false);
 
 	#region Overrides
 
@@ -39,6 +41,7 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 			SheetScale = bindingContext.ParseResult.GetValueForOption(SheetScaleOption),
 			Palette9Bit = bindingContext.ParseResult.GetValueForOption(Palette9BitOption),
 			ExportPaletteCount = bindingContext.ParseResult.GetValueForOption(ExportPaletteCountOption),
+			ExportIndividualImages = bindingContext.ParseResult.GetValueForOption(ExportIndividualImagesOption),
 			IgnoreCopies = bindingContext.ParseResult.GetValueForOption(IgnoreCopiesOption),
 		};
 	}
@@ -57,6 +60,7 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 		public int SheetScale { get; set; }
 		public bool Palette9Bit { get; set; }
 		public bool ExportPaletteCount { get; set; }
+		public bool ExportIndividualImages { get; set; }
 		public bool IgnoreCopies { get; set; }
 	}
 

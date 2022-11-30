@@ -32,10 +32,10 @@ Command CreateSpritesCommand()
 {
 	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument) { IsRequired = true };
 	var spritesOptions = new Option<FileInfo?>(name: "--sprites", description: "Output raw sprites file [optional]");
-	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output sprites palette file [optional]");
+	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output palette file [optional]");
 	var is4BitOption = new Option<bool>(name: "--4bit", description: "Generate 4-bit sprites", getDefaultValue: () => false);
 
-	var result = new Command("sprites", "Converts sprites source image")
+	var result = new Command("sprites", "Converts sprites source image into next hardware format")
 	{
 		inputOption,
 		spritesOptions,
@@ -64,6 +64,38 @@ Command CreateSpritesCommand()
 	return result;
 }
 
+Command CreateTilesCommand()
+{
+	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument) { IsRequired = true };
+	var spritesOptions = new Option<FileInfo?>(name: "--tiles", description: "Output raw tiles file [optional]");
+	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output palette file [optional]");
+
+	var result = new Command("tiles", "Converts tile definitions source image into Next hardware format")
+	{
+		inputOption,
+		spritesOptions,
+		paletteOption,
+	};
+
+	result.SetHandler((input, sprites, palette, globalOptions) =>
+	{
+		// Run sprites runner.
+		Run(() => new TilesRunner
+		{
+			Globals = globalOptions,
+			InputStreamProvider = FileInfoStreamProvider.Create(input),
+			OutputTilesStreamProvider = FileInfoStreamProvider.Create(sprites),
+			OutputPaletteStreamProvider = FileInfoStreamProvider.Create(palette),
+		});
+	},
+	inputOption,
+	spritesOptions,
+	paletteOption,
+	new GlobalOptionsBinder());
+
+	return result;
+}
+
 Command CreateRootCommand()
 {
 	var result = new RootCommand("Converter for ZX Spectrum Next cross-development formats.");
@@ -74,13 +106,15 @@ Command CreateRootCommand()
 	result.AddGlobalOption(GlobalOptionsBinder.SheetColoursPerRowOption);
 	result.AddGlobalOption(GlobalOptionsBinder.SheetScaleOption);
 
+	result.AddGlobalOption(GlobalOptionsBinder.KeepTransparentOption);
 	result.AddGlobalOption(GlobalOptionsBinder.TransparentOption);
 	result.AddGlobalOption(GlobalOptionsBinder.Palette9BitOption);
 	result.AddGlobalOption(GlobalOptionsBinder.ExportPaletteCountOption);
+	result.AddGlobalOption(GlobalOptionsBinder.ExportIndividualImagesOption);
 	result.AddGlobalOption(GlobalOptionsBinder.IgnoreCopiesOption);
-	result.AddGlobalOption(GlobalOptionsBinder.KeepBoxedTransparentsOption);
 
 	result.AddCommand(CreateSpritesCommand());
+	result.AddCommand(CreateTilesCommand());
 
 	return result;
 }

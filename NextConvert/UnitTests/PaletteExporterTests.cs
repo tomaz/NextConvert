@@ -13,11 +13,11 @@ public class PaletteExporterTests
 	[InlineData(true, false, true)]
 	[InlineData(true, true, false)]
 	[InlineData(true, true, true)]
-	public void Palette_ShouldExport(bool is4BitImage, bool is9BitColour, bool isCountExported)
+	public void Sprites_ShouldExportPalette(bool is4BitImage, bool is9BitColour, bool isCountExported)
 	{
 		// setup
-		var images = TestUtils.CreateImageSplitter().Split(ResourcesUtils.GetSpritesSourceImage());
-		var data = TestUtils.CreatePaletteMapper(is4BitImage).Map(images);
+		var images = TestUtils.CreateSpritesImageSplitter().Split(ResourcesUtils.GetSpritesSourceImage());
+		var data = TestUtils.CreateSpritesPaletteMapper(is4BitImage).Map(images);
 		var exporter = TestUtils.CreatePaletteExporter(data, is9BitColour, isCountExported);
 		var streamProvider = new MemoryStreamProvider();
 
@@ -26,6 +26,28 @@ public class PaletteExporterTests
 
 		// verify
 		var expectedPalette = ResourcesUtils.GetSpriteResultsPalette(is4BitImage);
+		var expectedData = TestUtils.CreateExportedPaletteData(expectedPalette, is9BitColour, isCountExported);
+		Assert.Equal(expectedData, streamProvider.Data);
+	}
+
+	[Theory]
+	[InlineData(false, false)]
+	[InlineData(false, true)]
+	[InlineData(true, false)]
+	[InlineData(true, true)]
+	public void Tiles_ShouldExportPalette(bool is9BitColour, bool isCountExported)
+	{
+		// setup
+		var images = TestUtils.CreateTilesImageSplitter().Split(ResourcesUtils.GetTilesSourceImage());
+		var data = TestUtils.CreateTilesPaletteMapper().Map(images);
+		var exporter = TestUtils.CreatePaletteExporter(data, is9BitColour, isCountExported);
+		var streamProvider = new MemoryStreamProvider();
+
+		// execute
+		exporter.Export(streamProvider);
+
+		// verify
+		var expectedPalette = ResourcesUtils.GetTileResultsPalette();
 		var expectedData = TestUtils.CreateExportedPaletteData(expectedPalette, is9BitColour, isCountExported);
 		Assert.Equal(expectedData, streamProvider.Data);
 	}

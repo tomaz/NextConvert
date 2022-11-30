@@ -2,7 +2,6 @@
 using NextConvert.Sources.ImageUtils;
 
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -19,6 +18,7 @@ public class SheetExporter
 	public IndexedData? Data { get; set; }
 	public Argb32 TransparentColour { get; set; } = Color.Transparent;
 	public Argb32 BackgroundColour { get; set; } = Color.Transparent;
+	public bool ExportIndividualImages { get; set; } = false;
 
 	public int Scale { get; set; } = 1;
 
@@ -125,6 +125,18 @@ public class SheetExporter
 
 			image.Save(streamProvider);
 		}
+
+
+		if (ExportIndividualImages)
+		{
+			var index = 0;
+
+			foreach (var image in Data.Images)
+			{
+				image.SourceImage.Image.Save(streamProvider, index);
+				index++;
+			}
+		}
 	}
 
 	#endregion
@@ -168,7 +180,9 @@ public class SheetExporter
 
 		void DrawImage(IndexedData.Image image)
 		{
-			// Render image itself.
+			var startX = (ItemWidth - image.Width) / 2;
+			var startY = (ItemHeight - image.Height) / 2;
+
 			for (int iy = 0; iy < image.Height; iy++)
 			{
 				for (int ix = 0; ix < image.Width; ix++)
@@ -178,8 +192,8 @@ public class SheetExporter
 					var colour = Data!.Colours[colourIndex];
 
 					context.Fill(colour.AsArgb32, new RectangleF(
-						x: Scaled(x + ix + 1),
-						y: Scaled(y + iy + HeaderHeight + 1),
+						x: Scaled(x + ix + startX + 1),
+						y: Scaled(y + iy + startY + HeaderHeight + 1),
 						width: Scaled(1),
 						height: Scaled(1)));
 				}
@@ -418,48 +432,3 @@ public class SheetExporter
 
 	#endregion
 }
-
-#region Extensions
-
-internal static class SheetExporterExtensions
-{
-	/// <summary>
-	/// Determines the format based on the file extension and saves the image or throws exception if format is not recognized, or saving fails.
-	/// </summary>
-	internal static void Save<T>(this Image<T> image, IStreamProvider streamProvider) where T : unmanaged, IPixel<T>
-	{
-		switch (streamProvider.GetExtension()?.Replace(".", "")?.ToLower())
-		{
-			case null:
-				// Null is used mainly for unit tests to save to memory.
-				image.SaveAsBmp(streamProvider.GetStream());
-				break;
-			case "jpg":
-			case "jpeg":
-				image.SaveAsJpeg(streamProvider.GetStream());
-				break;
-			case "bmp":
-				image.SaveAsBmp(streamProvider.GetStream());
-				break;
-			case "png":
-				image.SaveAsPng(streamProvider.GetStream());
-				break;
-			case "gif":
-				image.SaveAsGif(streamProvider.GetStream());
-				break;
-			case "pbm":
-				image.SaveAsPbm(streamProvider.GetStream());
-				break;
-			case "tga":
-				image.SaveAsTga(streamProvider.GetStream());
-				break;
-			case "webp":
-				image.SaveAsWebp(streamProvider.GetStream());
-				break;
-			default:
-				throw new InvalidDataException($"Image format {streamProvider.GetExtension()} not supported, use one of `bmp`, `png`, `jpg`, `gif`, `pbm`, `tga`, `webp`");
-		}
-	}
-}
-
-#endregion

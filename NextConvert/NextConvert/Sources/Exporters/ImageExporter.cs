@@ -1,8 +1,6 @@
 ﻿using NextConvert.Sources.Helpers;
 using NextConvert.Sources.ImageUtils;
 
-using System.Collections;
-
 namespace NextConvert.Sources.Exporters;
 
 /// <summary>
