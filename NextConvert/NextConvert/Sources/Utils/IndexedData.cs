@@ -2,9 +2,9 @@
 
 using System.Data;
 
-using static NextConvert.Sources.ImageUtils.IndexedData;
+using static NextConvert.Sources.Utils.IndexedData;
 
-namespace NextConvert.Sources.ImageUtils;
+namespace NextConvert.Sources.Utils;
 
 /// <summary>
 /// Represents palette and related list of indexed bitmaps.

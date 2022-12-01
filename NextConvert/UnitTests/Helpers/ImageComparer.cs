@@ -1,4 +1,4 @@
-﻿using NextConvert.Sources.ImageUtils;
+﻿using NextConvert.Sources.Utils;
 
 using System.Diagnostics.CodeAnalysis;
 

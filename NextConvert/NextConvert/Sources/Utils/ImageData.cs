@@ -1,9 +1,7 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-using System.Runtime.CompilerServices;
-
-namespace NextConvert.Sources.ImageUtils;
+namespace NextConvert.Sources.Utils;
 
 /// <summary>
 /// Represents raw image with additional information
@@ -48,7 +46,7 @@ public class ImageData
 
 	#endregion
 
-	#region Overrides
+	#region Helpers
 
 	public bool IsDuplicateOf(ImageData other)
 	{

@@ -1,5 +1,5 @@
 ﻿using NextConvert.Sources.Helpers;
-using NextConvert.Sources.ImageUtils;
+using NextConvert.Sources.Utils;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;

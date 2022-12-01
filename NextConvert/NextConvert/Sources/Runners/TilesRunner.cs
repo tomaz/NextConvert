@@ -1,7 +1,7 @@
 ﻿using NextConvert.Sources.Base;
 using NextConvert.Sources.Exporters;
 using NextConvert.Sources.Helpers;
-using NextConvert.Sources.ImageUtils;
+using NextConvert.Sources.Utils;
 
 namespace NextConvert.Sources.Runners;
 

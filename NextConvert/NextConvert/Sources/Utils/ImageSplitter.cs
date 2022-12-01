@@ -3,7 +3,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace NextConvert.Sources.ImageUtils;
+namespace NextConvert.Sources.Utils;
 
 /// <summary>
 /// Splits image into smaller chunks

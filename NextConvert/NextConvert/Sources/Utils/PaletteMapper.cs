@@ -3,7 +3,7 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace NextConvert.Sources.ImageUtils;
+namespace NextConvert.Sources.Utils;
 
 /// <summary>
 /// Maps colours from objects and prepares palette for export.

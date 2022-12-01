@@ -1,7 +1,7 @@
 ﻿using NextConvert.Sources.Base;
 using NextConvert.Sources.Exporters;
 using NextConvert.Sources.Helpers;
-using NextConvert.Sources.ImageUtils;
+using NextConvert.Sources.Utils;
 
 namespace NextConvert.Sources.Runners;
 
@@ -33,6 +33,7 @@ public class SpriteRunner : BaseRunner
 		if (Globals.SheetStreamProvider != null) Log.Verbose($"{Globals.SheetStreamProvider}");
 		
 		Log.NewLine();
+		Log.Verbose($"4-bit sprites: {IsSprite4Bit}");
 		DescribeGlobals();
 
 		Log.NewLine();
