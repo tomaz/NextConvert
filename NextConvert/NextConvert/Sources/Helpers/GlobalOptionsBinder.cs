@@ -11,20 +11,19 @@ namespace NextConvert.Sources.Helpers;
 /// </summary>
 public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 {
-	public static readonly Option<FileInfo?> SheetFilenameOption = new(name: "--sheet", description: "Generate sprite sheet image [bmp, png]");
-	public static readonly Option<string?> SheetBackgroundOption = new(name: "--sheet-background", description: "Info sheet image background colour [optional]");
+	public static readonly Option<FileInfo?> SheetFilenameOption = new(name: "--out-sheet", description: "Generate sprite sheet image (bmp, png)");
+	public static readonly Option<string?> SheetBackgroundOption = new(name: "--sheet-background", description: "Info sheet image background colour (optional)");
 	public static readonly Option<int> SheetImagesPerRowOption = new(name: "--sheet-image-columns", description: "Number of sprite columns for info sheet", getDefaultValue: () => 16);
 	public static readonly Option<int> SheetColoursPerRowOption = new(name: "--sheet-palette-columns", description: "Number of colour columns for info sheet", getDefaultValue: () => 16);
 	public static readonly Option<int> SheetScaleOption = new(name: "--sheet-scale", description: "Info sheet image scale (1, 2, 3 etc) [optional]", getDefaultValue: () => 1);
 
-	public static readonly Option<string?> TransparentOption = new(name: "--transparent", description: "Transparent colour [optional for transparent png]");
+	public static readonly Option<string?> TransparentOption = new(name: "--transparent", description: "Transparent colour (optional for transparent png)");
 	public static readonly Option<string> KeepTransparentOption = new Option<string>(name: "--keep-transparent", description: "Specifies what kind of transparent images to keep").FromAmong("none", "boxed", "all");
 	public static readonly Option<bool> IgnoreCopiesOption = new(name: "--ignore-copies", description: "Ignore copies, rotated and mirrored images", getDefaultValue: () => false);
 
 	public static readonly Option<bool> Palette9BitOption = new(name: "--9bit-palette", description: "Use 9-bit palette instead of 8", getDefaultValue: () => false);
 	public static readonly Option<bool> ExportPaletteCountOption = new(name: "--export-palette-count", description: "Export palette count to the first byte of the file", getDefaultValue: () => false);
-
-	public static readonly Option<bool> ExportIndividualImagesOption = new(name: "--export-images", description: "Export all individual images", getDefaultValue: () => false);
+	public static readonly Option<bool> ExportIndividualImagesOption = new(name: "--export-images", description: "Export individual images, one per each detected object", getDefaultValue: () => false);
 
 	#region Overrides
 
@@ -44,6 +43,27 @@ public class GlobalOptionsBinder : BinderBase<GlobalOptionsBinder.GlobalOptions>
 			ExportIndividualImages = bindingContext.ParseResult.GetValueForOption(ExportIndividualImagesOption),
 			IgnoreCopies = bindingContext.ParseResult.GetValueForOption(IgnoreCopiesOption),
 		};
+	}
+
+	#endregion
+
+	#region Public
+
+	public static void Register(Command command)
+	{
+		command.AddGlobalOption(SheetFilenameOption);
+		command.AddGlobalOption(SheetBackgroundOption);
+		command.AddGlobalOption(SheetImagesPerRowOption);
+		command.AddGlobalOption(SheetColoursPerRowOption);
+		command.AddGlobalOption(SheetScaleOption);
+
+		command.AddGlobalOption(KeepTransparentOption);
+		command.AddGlobalOption(TransparentOption);
+		command.AddGlobalOption(Palette9BitOption);
+
+		command.AddGlobalOption(ExportPaletteCountOption);
+		command.AddGlobalOption(ExportIndividualImagesOption);
+		command.AddGlobalOption(IgnoreCopiesOption);
 	}
 
 	#endregion

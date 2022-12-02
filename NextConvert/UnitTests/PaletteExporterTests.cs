@@ -16,17 +16,20 @@ public class PaletteExporterTests
 	public void Sprites_ShouldExportPalette(bool is4BitImage, bool is9BitColour, bool isCountExported)
 	{
 		// setup
-		var images = TestUtils.CreateSpritesImageSplitter().Split(ResourcesUtils.GetSpritesSourceImage());
-		var data = TestUtils.CreateSpritesPaletteMapper(is4BitImage).Map(images);
-		var exporter = TestUtils.CreatePaletteExporter(data, is9BitColour, isCountExported);
+		var images = TestObjects.CreateSpritesImageSplitter().Split(ResourcesUtils.Sprites.SourceImage());
+		var data = TestObjects.CreateSpritesPaletteMapper(is4BitImage).Map(images);
+		var exporter = TestObjects.CreatePaletteExporter(data, is9BitColour, isCountExported);
 		var streamProvider = new MemoryStreamProvider();
 
 		// execute
 		exporter.Export(streamProvider);
 
 		// verify
-		var expectedPalette = ResourcesUtils.GetSpriteResultsPalette(is4BitImage);
-		var expectedData = TestUtils.CreateExportedPaletteData(expectedPalette, is9BitColour, isCountExported);
+		var expectedData = ResourcesUtils.Sprites.ExpectedPaletteData(new PaletteBuilder()
+			.As4BitImage(is4BitImage)
+			.As9Bit(is9BitColour)
+			.CountExported(isCountExported)
+			.Get());
 		Assert.Equal(expectedData, streamProvider.Data);
 	}
 
@@ -38,17 +41,19 @@ public class PaletteExporterTests
 	public void Tiles_ShouldExportPalette(bool is9BitColour, bool isCountExported)
 	{
 		// setup
-		var images = TestUtils.CreateTilesImageSplitter().Split(ResourcesUtils.GetTilesSourceImage());
-		var data = TestUtils.CreateTilesPaletteMapper().Map(images);
-		var exporter = TestUtils.CreatePaletteExporter(data, is9BitColour, isCountExported);
+		var images = TestObjects.CreateTilesImageSplitter().Split(ResourcesUtils.Tiles.SourceImage());
+		var data = TestObjects.CreateTilesPaletteMapper().Map(images);
+		var exporter = TestObjects.CreatePaletteExporter(data, is9BitColour, isCountExported);
 		var streamProvider = new MemoryStreamProvider();
 
 		// execute
 		exporter.Export(streamProvider);
 
 		// verify
-		var expectedPalette = ResourcesUtils.GetTileResultsPalette();
-		var expectedData = TestUtils.CreateExportedPaletteData(expectedPalette, is9BitColour, isCountExported);
+		var expectedData = ResourcesUtils.Tiles.ExpectedPaletteData(new PaletteBuilder()
+			.As9Bit(is9BitColour)
+			.CountExported(isCountExported)
+			.Get());
 		Assert.Equal(expectedData, streamProvider.Data);
 	}
 }

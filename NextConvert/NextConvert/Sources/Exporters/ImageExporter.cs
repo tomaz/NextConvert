@@ -1,10 +1,10 @@
-﻿using NextConvert.Sources.Helpers;
-using NextConvert.Sources.Utils;
+﻿using NextConvert.Sources.Data;
+using NextConvert.Sources.Helpers;
 
 namespace NextConvert.Sources.Exporters;
 
 /// <summary>
-/// Exports a list of images into a single raw file.
+/// Exports a list of images into a single file with format expected by Next hardware.
 /// </summary>
 public class ImageExporter
 {

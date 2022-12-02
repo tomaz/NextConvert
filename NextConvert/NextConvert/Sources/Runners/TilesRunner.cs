@@ -1,4 +1,5 @@
 ﻿using NextConvert.Sources.Base;
+using NextConvert.Sources.Data;
 using NextConvert.Sources.Exporters;
 using NextConvert.Sources.Helpers;
 using NextConvert.Sources.Utils;
@@ -7,8 +8,8 @@ namespace NextConvert.Sources.Runners;
 
 public class TilesRunner : BaseRunner
 {
-	private const int TileWidth = 8;
-	private const int TileHeight = 8;
+	public const int TileWidth = 8;
+	public const int TileHeight = 8;
 
 	public IStreamProvider? InputStreamProvider { get; set; }
 	public IStreamProvider? OutputTilesStreamProvider { get; set; }
@@ -77,7 +78,7 @@ public class TilesRunner : BaseRunner
 		onEndMessage: (result) => $"{result.Count} tiles detected",
 		task: () => new ImageSplitter
 		{
-			TransparentColor = Globals.TransparentColour,
+			TransparentColour = Globals.TransparentColour,
 			KeepTransparents = Globals.KeepTransparents,
 			ItemWidth = TileWidth,
 			ItemHeight = TileHeight,

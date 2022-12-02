@@ -14,6 +14,14 @@ public static class Log
 	}
 
 	/// <summary>
+	/// Writes the given warning level message.
+	/// </summary>
+	public static void Warning(string message)
+	{
+		WriteLine(null, ConsoleColor.DarkYellow, message);
+	}
+
+	/// <summary>
 	/// Writes the given info level message.
 	/// </summary>
 	public static void Info(string message)

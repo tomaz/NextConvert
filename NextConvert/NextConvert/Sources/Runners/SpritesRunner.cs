@@ -1,4 +1,5 @@
 ﻿using NextConvert.Sources.Base;
+using NextConvert.Sources.Data;
 using NextConvert.Sources.Exporters;
 using NextConvert.Sources.Helpers;
 using NextConvert.Sources.Utils;
@@ -80,7 +81,7 @@ public class SpriteRunner : BaseRunner
 		onEndMessage: (result) => $"{result.Count} sprites detected",
 		task: () => new ImageSplitter
 		{
-			TransparentColor = Globals.TransparentColour,
+			TransparentColour = Globals.TransparentColour,
 			ItemWidth = SpriteWidth,
 			ItemHeight = SpriteHeight,
 			IgnoreCopies = Globals.IgnoreCopies,

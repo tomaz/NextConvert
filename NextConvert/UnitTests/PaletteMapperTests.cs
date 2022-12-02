@@ -22,14 +22,16 @@ public class PaletteMapperTests
 	public void Sprites_ShouldMapAllColours(KeepTransparentType keepTransparent, bool ignoreCopies, bool is4BitImage)
 	{
 		// setup
-		var images = TestUtils.CreateSpritesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
-		var mapper = TestUtils.CreateSpritesPaletteMapper(is4BitImage);
+		var images = TestObjects.CreateSpritesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.Sprites.SourceImage());
+		var mapper = TestObjects.CreateSpritesPaletteMapper(is4BitImage);
 
 		// execute
 		var data = mapper.Map(images);
 
 		// verify
-		var expected = ResourcesUtils.GetSpriteResultsPalette(is4BitImage);
+		var expected = ResourcesUtils.Sprites.ExpectedPaletteColours(new PaletteBuilder()
+			.As4BitImage(is4BitImage)
+			.Get());
 		Assert.Equal(expected, data.Colours, new IndexedColourComparer());
 	}
 
@@ -49,8 +51,8 @@ public class PaletteMapperTests
 	public void Sprites_ShouldMapAllImages(KeepTransparentType keepTransparent, bool ignoreCopies, bool is4BitImage)
 	{
 		// setup
-		var images = TestUtils.CreateSpritesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
-		var mapper = TestUtils.CreateSpritesPaletteMapper(is4BitImage);
+		var images = TestObjects.CreateSpritesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.Sprites.SourceImage());
+		var mapper = TestObjects.CreateSpritesPaletteMapper(is4BitImage);
 
 		// execute
 		var data = mapper.Map(images);
@@ -58,30 +60,10 @@ public class PaletteMapperTests
 		// verify
 		// note: we only check for counts, there's no simple way of checking all image indexes apart from reimplementing the whole colour mapping in tests or relying on yet another set of files from resources. We are covering indexes when testing `SpritesRunner` anyway).
 		// note: whether sprites are 4bit/8bit doesn't affect the number of sprites produced, only changes the palette.
-		var expected = ResourcesUtils.GetSpriteResultImages(keepTransparent, ignoreCopies);
-		Assert.Equal(expected.Count, data.Images.Count);
-	}
-
-	[Theory]
-	[InlineData(KeepTransparentType.All, false)]
-	[InlineData(KeepTransparentType.All, true)]
-	[InlineData(KeepTransparentType.None, false)]
-	[InlineData(KeepTransparentType.None, true)]
-	[InlineData(KeepTransparentType.Boxed, false)]
-	[InlineData(KeepTransparentType.Boxed, true)]
-	public void Tiles_ShouldMapAllImages(KeepTransparentType keepTransparent, bool ignoreCopies)
-	{
-		// setup
-		var images = TestUtils.CreateTilesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetTilesSourceImage());
-		var mapper = TestUtils.CreateTilesPaletteMapper();
-
-		// execute
-		var data = mapper.Map(images);
-
-		// verify
-		// note: we only check for counts, there's no simple way of checking all image indexes apart from reimplementing the whole colour mapping in tests or relying on yet another set of files from resources. We are covering indexes when testing `SpritesRunner` anyway).
-		// note: whether sprites are 4bit/8bit doesn't affect the number of sprites produced, only changes the palette.
-		var expected = ResourcesUtils.GetTileResultImages(keepTransparent, ignoreCopies);
+		var expected = ResourcesUtils.Sprites.ExpectedSplitImages(new ImagesBuilder()
+			.Transparents(keepTransparent)
+			.IgnoringCopies(ignoreCopies)
+			.Get());
 		Assert.Equal(expected.Count, data.Images.Count);
 	}
 
@@ -95,14 +77,40 @@ public class PaletteMapperTests
 	public void Tiles_ShouldMapAllColours(KeepTransparentType keepTransparent, bool ignoreCopies)
 	{
 		// setup
-		var images = TestUtils.CreateTilesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetTilesSourceImage());
-		var mapper = TestUtils.CreateTilesPaletteMapper();
+		var images = TestObjects.CreateTilesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.Tiles.SourceImage());
+		var mapper = TestObjects.CreateTilesPaletteMapper();
 
 		// execute
 		var data = mapper.Map(images);
 
 		// verify
-		var expected = ResourcesUtils.GetTileResultsPalette();
+		var expected = ResourcesUtils.Tiles.ExpectedPaletteColours(new PaletteBuilder().Get());
 		Assert.Equal(expected, data.Colours, new IndexedColourComparer());
+	}
+
+	[Theory]
+	[InlineData(KeepTransparentType.All, false)]
+	[InlineData(KeepTransparentType.All, true)]
+	[InlineData(KeepTransparentType.None, false)]
+	[InlineData(KeepTransparentType.None, true)]
+	[InlineData(KeepTransparentType.Boxed, false)]
+	[InlineData(KeepTransparentType.Boxed, true)]
+	public void Tiles_ShouldMapAllImages(KeepTransparentType keepTransparent, bool ignoreCopies)
+	{
+		// setup
+		var images = TestObjects.CreateTilesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.Tiles.SourceImage());
+		var mapper = TestObjects.CreateTilesPaletteMapper();
+
+		// execute
+		var data = mapper.Map(images);
+
+		// verify
+		// note: we only check for counts, there's no simple way of checking all image indexes apart from reimplementing the whole colour mapping in tests or relying on yet another set of files from resources. We are covering indexes when testing `SpritesRunner` anyway).
+		// note: whether sprites are 4bit/8bit doesn't affect the number of sprites produced, only changes the palette.
+		var expected = ResourcesUtils.Tiles.ExpectedSplitImages(new ImagesBuilder()
+			.Transparents(keepTransparent)
+			.IgnoringCopies(ignoreCopies)
+			.Get());
+		Assert.Equal(expected.Count, data.Images.Count);
 	}
 }

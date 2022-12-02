@@ -22,16 +22,19 @@ public class ImageExporterTests
 	public void Sprites_ShouldWriteAllImages(KeepTransparentType keepTransparent, bool ignoreCopies, bool is4Bitimage)
 	{
 		// setup
-		var images = TestUtils.CreateSpritesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetSpritesSourceImage());
-		var data = TestUtils.CreateSpritesPaletteMapper(is4Bitimage).Map(images);
-		var exporter = TestUtils.CreateSpriteExporter(data, is4Bitimage);
+		var images = TestObjects.CreateSpritesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.Sprites.SourceImage());
+		var data = TestObjects.CreateSpritesPaletteMapper(is4Bitimage).Map(images);
+		var exporter = TestObjects.CreateSpriteExporter(data, is4Bitimage);
 		var streamProvider = new MemoryStreamProvider();
 
 		// execute
 		exporter.Export(streamProvider);
 
 		// verify
-		var expectedData = TestUtils.CreateExportedImageData(data.Images, is4Bitimage);
+		var expectedData = ResourcesUtils.Sprites.ExpectedImageData(new ImagesBuilder()
+			.FromImages(data.Images)
+			.As4Bit(is4Bitimage)
+			.Get());
 		Assert.Equal(expectedData, streamProvider.Data);
 	}
 
@@ -45,16 +48,21 @@ public class ImageExporterTests
 	public void Tiles_ShouldWriteAllImages(KeepTransparentType keepTransparent, bool ignoreCopies)
 	{
 		// setup
-		var images = TestUtils.CreateTilesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.GetTilesSourceImage());
-		var data = TestUtils.CreateTilesPaletteMapper().Map(images);
-		var exporter = TestUtils.CreateTilesExporter(data);
+		var images = TestObjects.CreateTilesImageSplitter(keepTransparent, ignoreCopies).Split(ResourcesUtils.Tiles.SourceImage());
+		var data = TestObjects.CreateTilesPaletteMapper().Map(images);
+		var exporter = TestObjects.CreateTilesExporter(data);
 		var streamProvider = new MemoryStreamProvider();
 
 		// execute
 		exporter.Export(streamProvider);
 
 		// verify
-		var expectedData = TestUtils.CreateExportedImageData(data.Images, is4Bit: true);
+		var expectedData = ResourcesUtils.Tiles.ExpectedImageData(new ImagesBuilder()
+			.FromImages(data.Images)
+			.Transparents(keepTransparent)
+			.IgnoringCopies(ignoreCopies)
+			.As4Bit(true)
+			.Get());
 		Assert.Equal(expectedData, streamProvider.Data);
 	}
 }

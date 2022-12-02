@@ -1,0 +1,1 @@
+NextConvert\bin\Debug\net7.0\NextConvert.exe --transparent "#FF00FF" --sheet-background "#011E2B" --sheet-image-columns 5 --sheet-palette-columns 8 --keep-transparent boxed tiles --in-tiles UnitTests\Resources\Project-Tiles-Image.bmp --out-sheet UnitTests\Resources\export-tiles-sheet.bmp

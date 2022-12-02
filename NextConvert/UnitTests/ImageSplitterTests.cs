@@ -16,13 +16,16 @@ public class ImageSplitterTests
 	public void Sprites_ShouldExtractAllImages(KeepTransparentType keepTransparents, bool ignoreCopies)
 	{
 		// setup
-		var splitter = TestUtils.CreateSpritesImageSplitter(keepTransparents, ignoreCopies);
+		var splitter = TestObjects.CreateSpritesImageSplitter(keepTransparents, ignoreCopies);
 
 		// execute
-		var images = splitter.Split(ResourcesUtils.GetSpritesSourceImage());
+		var images = splitter.Split(ResourcesUtils.Sprites.SourceImage());
 
 		// verify
-		var expected = ResourcesUtils.GetSpriteResultImages(keepTransparents, ignoreCopies);
+		var expected = ResourcesUtils.Sprites.ExpectedSplitImages(new ImagesBuilder()
+			.Transparents(keepTransparents)
+			.IgnoringCopies(ignoreCopies)
+			.Get());
 		Assert.Equal(expected, images, new ImageComparer());
 	}
 
@@ -36,13 +39,16 @@ public class ImageSplitterTests
 	public void Tiles_ShouldExtractAllImages(KeepTransparentType keepTransparents, bool ignoreCopies)
 	{
 		// setup
-		var splitter = TestUtils.CreateTilesImageSplitter(keepTransparents, ignoreCopies);
+		var splitter = TestObjects.CreateTilesImageSplitter(keepTransparents, ignoreCopies);
 
 		// execute
-		var images = splitter.Split(ResourcesUtils.GetTilesSourceImage());
+		var images = splitter.Split(ResourcesUtils.Tiles.SourceImage());
 
 		// verify
-		var expected = ResourcesUtils.GetTileResultImages(keepTransparents, ignoreCopies);
+		var expected = ResourcesUtils.Tiles.ExpectedSplitImages(new ImagesBuilder()
+			.Transparents(keepTransparents)
+			.IgnoringCopies(ignoreCopies)
+			.Get());
 		Assert.Equal(expected, images, new ImageComparer());
 	}
 }
