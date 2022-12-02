@@ -1,5 +1,6 @@
 ﻿using NextConvert.Sources.Base;
 using NextConvert.Sources.Helpers;
+using NextConvert.Sources.Options;
 using NextConvert.Sources.Runners;
 
 using System.CommandLine;
@@ -9,30 +10,11 @@ return CreateRootCommand().InvokeAsync(args).Result;
 
 #region Command line arguments
 
-FileInfo? CreateExistingFileTestParseArgument(ArgumentResult result)
-{
-	if (result.Tokens.Count == 0)
-	{
-		result.ErrorMessage = "Input filename is required!";
-		return null;
-	}
-
-	var filename = result.Tokens.First().Value;
-
-	if (!File.Exists(filename))
-	{
-		result.ErrorMessage = $"{filename} doesn't exist!";
-		return null;
-	}
-
-	return new FileInfo(filename);
-}
-
 Command CreateSpritesCommand()
 {
-	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument) { IsRequired = true };
-	var spritesOptions = new Option<FileInfo?>(name: "--sprites", description: "Output raw sprites file [optional]");
-	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output palette file [optional]");
+	var inputOption = new Option<FileInfo?>(name: "--in-sprites", description: "Input image file (bmp, png)", parseArgument: OptionsUtils.CreateExistingFileTestParseArgument) { IsRequired = true };
+	var spritesOptions = new Option<FileInfo?>(name: "--out-sprites", description: "Output raw sprites file (optional)");
+	var paletteOption = new Option<FileInfo?>(name: "--out-palette", description: "Output palette file (optional)");
 	var is4BitOption = new Option<bool>(name: "--4bit", description: "Generate 4-bit sprites", getDefaultValue: () => false);
 
 	var result = new Command("sprites", "Converts sprites source image into next hardware format")
@@ -45,7 +27,6 @@ Command CreateSpritesCommand()
 
 	result.SetHandler((input, sprites, palette, is4Bit, globalOptions) =>
 	{
-		// Run sprites runner.
 		Run(() => new SpriteRunner
 		{
 			Globals = globalOptions,
@@ -66,20 +47,19 @@ Command CreateSpritesCommand()
 
 Command CreateTilesCommand()
 {
-	var inputOption = new Option<FileInfo?>(name: "--input", description: "Input image [bmp, png]", parseArgument: CreateExistingFileTestParseArgument) { IsRequired = true };
-	var spritesOptions = new Option<FileInfo?>(name: "--tiles", description: "Output raw tiles file [optional]");
-	var paletteOption = new Option<FileInfo?>(name: "--palette", description: "Output palette file [optional]");
+	var inputOption = new Option<FileInfo?>(name: "--in-tiles", description: "Input image (bmp, png)", parseArgument: OptionsUtils.CreateExistingFileTestParseArgument) { IsRequired = true };
+	var tilesOption = new Option<FileInfo?>(name: "--out-tiles", description: "Output raw tiles file (optional)");
+	var paletteOption = new Option<FileInfo?>(name: "--out-palette", description: "Output palette file (optional)");
 
 	var result = new Command("tiles", "Converts tile definitions source image into Next hardware format")
 	{
 		inputOption,
-		spritesOptions,
+		tilesOption,
 		paletteOption,
 	};
 
 	result.SetHandler((input, sprites, palette, globalOptions) =>
 	{
-		// Run sprites runner.
 		Run(() => new TilesRunner
 		{
 			Globals = globalOptions,
@@ -89,8 +69,27 @@ Command CreateTilesCommand()
 		});
 	},
 	inputOption,
-	spritesOptions,
+	tilesOption,
 	paletteOption,
+	new GlobalOptionsBinder());
+
+	return result;
+}
+
+Command CreateTilemapCommand()
+{
+	var result = new Command("tilemap", "Converts tilemap source into Next hardware format");
+	TilemapOptionsBinder.Register(result);
+
+	result.SetHandler((tilemapOptions, globalOptions) =>
+	{
+		Run(() => new TilemapRunner
+		{
+			Globals = globalOptions,
+			Options = tilemapOptions,
+		});
+	},
+	new TilemapOptionsBinder(),
 	new GlobalOptionsBinder());
 
 	return result;
@@ -98,26 +97,20 @@ Command CreateTilesCommand()
 
 Command CreateRootCommand()
 {
-	var result = new RootCommand("Converter for ZX Spectrum Next cross-development formats.");
+	var result = new RootCommand("Converter for ZX Spectrum Next raw formats.");
 
-	result.AddGlobalOption(GlobalOptionsBinder.SheetFilenameOption);
-	result.AddGlobalOption(GlobalOptionsBinder.SheetBackgroundOption);
-	result.AddGlobalOption(GlobalOptionsBinder.SheetImagesPerRowOption);
-	result.AddGlobalOption(GlobalOptionsBinder.SheetColoursPerRowOption);
-	result.AddGlobalOption(GlobalOptionsBinder.SheetScaleOption);
-
-	result.AddGlobalOption(GlobalOptionsBinder.KeepTransparentOption);
-	result.AddGlobalOption(GlobalOptionsBinder.TransparentOption);
-	result.AddGlobalOption(GlobalOptionsBinder.Palette9BitOption);
-	result.AddGlobalOption(GlobalOptionsBinder.ExportPaletteCountOption);
-	result.AddGlobalOption(GlobalOptionsBinder.ExportIndividualImagesOption);
-	result.AddGlobalOption(GlobalOptionsBinder.IgnoreCopiesOption);
+	GlobalOptionsBinder.Register(result);
 
 	result.AddCommand(CreateSpritesCommand());
 	result.AddCommand(CreateTilesCommand());
+	result.AddCommand(CreateTilemapCommand());
 
 	return result;
 }
+
+#endregion
+
+#region Helpers
 
 void Run(Func<BaseRunner> creator)
 {

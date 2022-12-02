@@ -1,4 +1,5 @@
-﻿using NextConvert.Sources.Helpers;
+﻿using NextConvert.Sources.Data;
+using NextConvert.Sources.Helpers;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -116,6 +117,9 @@ public class PaletteMapper
 						bestBank = existingBank;
 						bestBankAddedColours = existingBankAddedColours!.Value;
 					}
+
+					// If we found perfect match (all colours can be reused), no need to search further.
+					if (bestBankAddedColours == 0) break;
 				}
 
 				// If we didn't find matching bank, create a new one.
@@ -128,7 +132,7 @@ public class PaletteMapper
 				// Add the image to the bank.
 				bestBank.AddImage(image, TransparentColour);
 
-				// Adjust image's bank offset so we can correctly render it. Only used when rendering to an image, colour indexes must be used as-is for raw data.
+				// Adjust image's bank offset so we can correctly render it.
 				image.Image.PaletteBankOffset = result.IndexOf(bestBank);
 			}
 
@@ -274,7 +278,7 @@ public class PaletteMapper
 			{
 				InsertTransparentColourToStart(transparentColour);
 			}
-			else if (transparentColourIndex != 0)
+			else if (transparentColourIndex > 0)
 			{
 				MoveTransparentColourToStart(transparentColourIndex);
 			}

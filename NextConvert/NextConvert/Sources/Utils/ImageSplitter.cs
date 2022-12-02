@@ -1,4 +1,6 @@
-﻿using NextConvert.Sources.Helpers;
+﻿using NextConvert.Sources.Data;
+using NextConvert.Sources.Helpers;
+using NextConvert.Sources.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -10,7 +12,7 @@ namespace NextConvert.Sources.Utils;
 /// </summary>
 public class ImageSplitter
 {
-	public Color TransparentColor { get; set; }
+	public Color TransparentColour { get; set; }
 	public KeepTransparentType KeepTransparents { get; set; } = KeepTransparentType.None;
 
 	public int ItemWidth { get; set; }
@@ -44,7 +46,7 @@ public class ImageSplitter
 		var imagesWithoutTransparents = RemoveTransparent(images);
 		switch (KeepTransparents)
 		{
-			case KeepTransparentType.All: Log.Verbose($"Keeping all transparents, remaining {imagesWithoutTransparents.Count} objects"); break;
+			case KeepTransparentType.All: Log.Verbose($"Keeping all transparents, all {imagesWithoutTransparents.Count} objects remaining"); break;
 			case KeepTransparentType.None: Log.Verbose($"Removing all transparents, {imagesWithoutTransparents.Count} objects remaining"); break;
 			case KeepTransparentType.Boxed: Log.Verbose($"Removing boxed transparents, {imagesWithoutTransparents.Count} objects remaining"); break;
 		}
@@ -106,8 +108,8 @@ public class ImageSplitter
 						// Handle each pixel column of the item.
 						for (int xOffs = 0; xOffs < ItemWidth; xOffs++)
 						{
-							var color = pixelRow[xBase + xOffs];
-							itemsRow[xBase / ItemWidth].Image.Mutate(o => o.SetPixel(color, xOffs, yOffs));
+							var colour = pixelRow[xBase + xOffs];
+							itemsRow[xBase / ItemWidth].Image.Mutate(o => o.SetPixel(colour, xOffs, yOffs));
 						}
 					}
 				}
@@ -115,7 +117,7 @@ public class ImageSplitter
 				// Update transparent flag for all images now that we have the data for all images of the row.
 				foreach (var image in itemsRow)
 				{
-					image.IsTransparent = image.Image.IsTransparent(TransparentColor);
+					image.IsTransparent = image.Image.IsTransparent(TransparentColour);
 				}
 
 				// Add all items to the resulting list.
@@ -260,7 +262,7 @@ internal static class ImageSplitterExtensions
 	/// </summary>
 	internal static bool IsTransparent(this Image<Argb32> image, Color transparent)
 	{
-		var transparentColor = transparent.ToPixel<Argb32>();
+		var transparentColour = transparent.ToPixel<Argb32>();
 		var result = true;
 
 		image.ProcessPixelRows(accessor =>
@@ -272,7 +274,7 @@ internal static class ImageSplitterExtensions
 				for (int x = 0; x < row.Length; x++)
 				{
 					ref Argb32 pixel = ref row[x];
-					if (pixel != transparentColor)
+					if (pixel != transparentColour)
 					{
 						result = false;
 						return;

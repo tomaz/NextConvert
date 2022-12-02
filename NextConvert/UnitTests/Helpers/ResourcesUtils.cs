@@ -1,6 +1,5 @@
 ﻿using NextConvert.Sources.Data;
-using NextConvert.Sources.Helpers;
-
+using NextConvert.Sources.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
