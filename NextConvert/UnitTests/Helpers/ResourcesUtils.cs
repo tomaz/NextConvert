@@ -1,4 +1,5 @@
 ﻿using NextConvert.Sources.Data;
+using NextConvert.Sources.Helpers;
 using NextConvert.Sources.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -11,6 +12,7 @@ public static class ResourcesUtils
 	{
 		Sprites = new SpritesDataProvider();
 		Tiles = new TilesDataProvider();
+		Tilemap = new TilemapDataProvider();
 	}
 
 	#region Sprites
@@ -323,6 +325,80 @@ public static class ResourcesUtils
 		protected override byte[] OnSourceImageData() => Resources.Project_Tiles_Image;
 
 		#endregion
+	}
+
+	#endregion
+
+	#region Tilemap
+
+	public static TilemapDataProvider Tilemap { get; }
+
+	public class TilemapDataProvider // Note: we don't dervie from `BaseDataProvider` since tilemap is completely different to image based data.
+	{
+		/// <summary>
+		/// Returns the source 2x2 tilemap data. Tiles correspond with the data from <see cref="TilesDataProvider"/>.
+		/// </summary>
+		public IStreamProvider SourceTilemapStream() => new MemoryStreamProvider(
+			data: Resources.Project_Tilemap_2x2, 
+			reportedExtension: "map");
+
+		/// <summary>
+		/// Returns expected tilemap data.
+		/// </summary>
+		public TilemapData ExpectedTilemapData()
+		{
+			var result = new TilemapData(2, 2);
+
+			result[0, 0] = new TilemapData.Tile { Index = 1, FlippedX = true };
+			result[1, 0] = new TilemapData.Tile { Index = 2, FlippedY = true };
+			result[0, 1] = new TilemapData.Tile { Index = 1, FlippedX = true, FlippedY = true };
+			result[1, 1] = new TilemapData.Tile { Index = 0 };
+
+			return result;
+		}
+
+		/// <summary>
+		/// Generates expected raw tilemap data ready for ZX Next hardware. Uses <see cref="ExpectedTilemapData"/> as source for export under the hood.
+		/// </summary>
+		public byte[] ExpectedNextTilemapData(IndexedData? definitions = null, bool useAttribute = false)
+		{
+			var result = new List<byte>();
+
+			var tilemap = ExpectedTilemapData();
+
+			for (int y = 0; y < tilemap.Height; y++)
+			{
+				for (int x = 0; x < tilemap.Width; x++)
+				{
+					var tile = tilemap[x, y];
+
+					if (useAttribute)
+					{
+						result.Add((byte)tile.Index);
+
+						byte attributes = 0;
+						if (tile.RotatedClockwise) attributes |= 1 << 1;
+						if (tile.FlippedY) attributes |= 1 << 2;
+						if (tile.FlippedX) attributes |= 1 << 3;
+
+						if (definitions != null)
+						{
+							var definition = definitions.Images[tile.Index];
+							var offset = definition.PaletteBankOffset;
+							if (offset > 0) attributes |= (byte)(offset << 4);
+						}
+
+						result.Add(attributes);
+					}
+					else
+					{
+						result.Add((byte)tile.Index);
+					}
+				}
+			}
+
+			return result.ToArray();
+		}
 	}
 
 	#endregion

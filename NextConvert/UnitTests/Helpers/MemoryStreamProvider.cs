@@ -5,14 +5,23 @@ namespace UnitTests.Helpers;
 public class MemoryStreamProvider : IStreamProvider
 {
 	public MemoryStream Stream { get; } = new();
+
 	public byte[] Data { get => Stream.ToArray(); }
 
 	private string? ReportedExtension { get; }
 
-	public MemoryStreamProvider(string? reportedExtension = null)
+	public MemoryStreamProvider(byte[]? data = null, string? reportedExtension = null)
 	{
+		if (data != null)
+		{
+			Stream.Write(data, 0, data.Length);
+			Stream.Position = 0;
+		}
+
 		ReportedExtension = reportedExtension;
 	}
+
+	#region IStreamProvider
 
 	public string? GetExtension()
 	{
@@ -28,4 +37,6 @@ public class MemoryStreamProvider : IStreamProvider
 	{
 		return Stream;
 	}
+
+	#endregion
 }

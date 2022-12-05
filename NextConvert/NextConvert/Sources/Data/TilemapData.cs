@@ -78,6 +78,8 @@ public class TilemapData
 		/// Specifies whether the tile is rotated clockwise.
 		/// </summary>
 		public bool RotatedClockwise { get; set; } = false;
+
+		public override string ToString() => $"{Index}{(FlippedX ? "x" : "")}{(FlippedY ? "y" : "")}{(RotatedClockwise ? "r" : "")}";
 	}
 
 	#endregion

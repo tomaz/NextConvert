@@ -273,6 +273,16 @@ namespace UnitTests {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] Project_Tilemap_2x2 {
+            get {
+                object obj = ResourceManager.GetObject("Project_Tilemap_2x2", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] Project_Tiles_Image {
             get {
                 object obj = ResourceManager.GetObject("Project_Tiles_Image", resourceCulture);

@@ -75,6 +75,26 @@ public static class TestObjects
 
 	#endregion
 
+	#region Tilemap
+
+	public static TilemapParser CreateTilemapParser()
+	{
+		// There are no options for tilemap parser, it parses the input based on the file extension. The data it generates is format agnostic, all subsequent mapping with tile definitions is performed during exporting phase.
+		return new TilemapParser();
+	}
+
+	public static TilemapExporter CreateTilemapExporter(TilemapData tilemap, IndexedData? definitions = null, bool useAttribute = false)
+	{
+		return new TilemapExporter
+		{
+			Tilemap = tilemap,
+			Definitions = definitions,
+			UseAttributeByte = useAttribute,
+		};
+	}
+
+	#endregion
+
 	#region General
 
 	public static PaletteExporter CreatePaletteExporter(IndexedData? data, bool is9Bit = false, bool isCountExported = false)
