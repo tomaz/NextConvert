@@ -1,6 +1,6 @@
 ﻿using UnitTests.Helpers;
 
-namespace UnitTests;
+namespace UnitTests.Exporters;
 
 public class PaletteExporterTests
 {

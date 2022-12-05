@@ -1,7 +1,7 @@
 ﻿using NextConvert.Sources.Options;
 using UnitTests.Helpers;
 
-namespace UnitTests;
+namespace UnitTests.Exporters;
 
 public class ImageExporterTests
 {
