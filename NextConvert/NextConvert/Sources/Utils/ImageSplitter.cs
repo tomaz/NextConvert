@@ -108,8 +108,10 @@ public class ImageSplitter
 						// Handle each pixel column of the item.
 						for (int xOffs = 0; xOffs < ItemWidth; xOffs++)
 						{
-							var colour = pixelRow[xBase + xOffs];
-							itemsRow[xBase / ItemWidth].Image.Mutate(o => o.SetPixel(colour, xOffs, yOffs));
+							// Note: added `WithAlpha` as I ran into issues when alpha was 0; then instead of writing correct colour (for example ARGB (0,255,0,255), it wrote ARGB (0,0,0,0).
+							var colour = pixelRow[xBase + xOffs].WithAlpha(255);
+							var rowIndex = xBase / ItemWidth;
+							itemsRow[rowIndex].Image.Mutate(o => o.SetPixel(colour, xOffs, yOffs));
 						}
 					}
 				}
