@@ -2,7 +2,7 @@
   "profiles": {
     "NextConvert": {
       "commandName": "Project",
-      "commandLineArgs": "--sheet-background #011E2B\r\n--sheet-image-columns 10\r\n--sheet-palette-columns 16\r\n--sheet-scale 2\r\n--export-palette-count\r\n--keep-transparent all\r\n--transparent #FF00FF\r\n--9bit-palette\r\nsprites\r\n--in-sprites \"c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.bmp\"\r\n--out-sprites c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.spr\r\n--out-palette c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.pal\r\n--out-sheet c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game-sheet.bmp\r\n"
+      "commandLineArgs": "--sheet-background #011E2B\r\n--sheet-image-columns 10\r\n--sheet-palette-columns 16\r\n--sheet-scale 2\r\n--export-palette-count\r\n--keep-transparent all\r\n--transparent #FF00FF\r\n--9bit-palette\r\nsprites\r\n--size 8\r\n--in-sprites \"c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.bmp\"\r\n--out-sprites c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.spr\r\n--out-palette c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.pal\r\n--out-sheet c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game-sheet.bmp\r\n"
     }
   }
 }

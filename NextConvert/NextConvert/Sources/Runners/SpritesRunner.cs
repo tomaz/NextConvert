@@ -8,15 +8,13 @@ namespace NextConvert.Sources.Runners;
 
 public class SpriteRunner : BaseRunner
 {
-	private const int SpriteWidth = 16;
-	private const int SpriteHeight = 16;
-
 	public IStreamProvider? InputStreamProvider { get; set; }
 	public IStreamProvider? InputPaletteStreamProvider { get; set; }
 	public IStreamProvider? OutputSpritesStreamProvider { get; set; }
 	public IStreamProvider? OutputPaletteStreamProvider { get; set; }
 
 	public bool IsSprite4Bit { get; set; } = false;
+	public int SpriteSize { get; set; } = 16;
 
 	#region Overrides
 
@@ -37,6 +35,9 @@ public class SpriteRunner : BaseRunner
 		
 		Log.NewLine();
 		Log.Verbose($"4-bit sprites: {IsSprite4Bit}");
+		Log.Verbose($"Sprite size: {SpriteSize}x{SpriteSize}");
+
+		Log.NewLine();
 		DescribeGlobals();
 
 		Log.NewLine();
@@ -84,8 +85,8 @@ public class SpriteRunner : BaseRunner
 		task: () => new ImageSplitter
 		{
 			TransparentColour = Globals.TransparentColour,
-			ItemWidth = SpriteWidth,
-			ItemHeight = SpriteHeight,
+			ItemWidth = SpriteSize,
+			ItemHeight = SpriteSize,
 			IgnoreCopies = Globals.IgnoreCopies,
 			KeepTransparents = Globals.KeepTransparents,
 		}
@@ -138,8 +139,8 @@ public class SpriteRunner : BaseRunner
 			BackgroundColour = Globals.SheetBackgroundColour!.Value,
 			Scale = Globals.SheetScale,
 
-			ItemWidth = SpriteWidth,
-			ItemHeight = SpriteHeight,
+			ItemWidth = SpriteSize >= 16 ? SpriteSize : 16,	// if size is below 16px, we run out of space for rendering indexes
+			ItemHeight = SpriteSize >= 16 ? SpriteSize : 16,
 			ItemsPerRow = Globals.SheetImagesPerRow,
 			ColoursPerRow = Globals.SheetColoursPerRow,
 

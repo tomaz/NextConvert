@@ -17,6 +17,7 @@ Command CreateSpritesCommand()
 	var spritesOptions = new Option<FileInfo?>(name: "--out-sprites", description: "Output raw sprites file (optional)");
 	var paletteOption = new Option<FileInfo?>(name: "--out-palette", description: "Output palette file (optional)");
 	var is4BitOption = new Option<bool>(name: "--4bit", description: "Generate 4-bit sprites", getDefaultValue: () => false);
+	var sizeOption = new Option<int>(name: "--size", description: "Sprite witdh and height in pixels (optional)", getDefaultValue: () => 16);
 
 	var result = new Command("sprites", "Converts sprites source image into next hardware format")
 	{
@@ -25,9 +26,10 @@ Command CreateSpritesCommand()
 		spritesOptions,
 		paletteOption,
 		is4BitOption,
+		sizeOption,
 	};
 
-	result.SetHandler((inSprites, inPalette, sprites, palette, is4Bit, globalOptions) =>
+	result.SetHandler((inSprites, inPalette, sprites, palette, is4Bit, size, globalOptions) =>
 	{
 		Run(() => new SpriteRunner
 		{
@@ -36,6 +38,7 @@ Command CreateSpritesCommand()
 			OutputSpritesStreamProvider = FileInfoStreamProvider.Create(sprites),
 			OutputPaletteStreamProvider = FileInfoStreamProvider.Create(palette),
 			IsSprite4Bit = is4Bit,
+			SpriteSize = size,
 		});
 	},
 	inputSpritesOption,
@@ -43,6 +46,7 @@ Command CreateSpritesCommand()
 	spritesOptions,
 	paletteOption,
 	is4BitOption,
+	sizeOption,
 	new GlobalOptionsBinder());
 
 	return result;
