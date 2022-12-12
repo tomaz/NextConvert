@@ -3,6 +3,8 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Processing;
 
+using System.Reflection;
+
 namespace NextConvert.Sources.Helpers;
 
 /// <summary>
@@ -22,10 +24,14 @@ public class FontRenderer
 
 	public FontRenderer(int scale)
 	{
-		var filename = "font.ttf";
-
-		// If font is not present, we will ignore rendering.
-		if (!File.Exists(filename)) return;
+		// First try with the font from current location (so users can supply different font for each project).
+		var filename = CheckFontOnPath("");
+		if (filename == null)
+		{
+			// If font doesn't exist, check if it's present on the same path executable is. If still no go, exit
+			filename = CheckFontOnPath(Assembly.GetExecutingAssembly().Location);
+			if (filename == null) return;
+		}
 
 		var collection = new FontCollection();
 		var family = collection.Add(filename);
@@ -33,6 +39,19 @@ public class FontRenderer
 		Font = family.CreateFont(9 * scale);
 		Options = new TextOptions(Font);
 		Enabled = true;
+	}
+
+	/// <summary>
+	/// Checks if the font is present on the given path (folder only). If present, then the method returns full path with filename included, otherwise returns null
+	/// </summary>
+	private static string? CheckFontOnPath(string path)
+	{
+		var folder = Path.GetDirectoryName(path) ?? "";
+		var filename = Path.Combine(folder, "font.ttf");
+
+		if (!File.Exists(filename)) return null;
+
+		return filename;
 	}
 
 	#endregion
