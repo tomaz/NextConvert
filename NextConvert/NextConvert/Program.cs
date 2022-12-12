@@ -12,31 +12,34 @@ return CreateRootCommand().InvokeAsync(args).Result;
 
 Command CreateSpritesCommand()
 {
-	var inputOption = new Option<FileInfo?>(name: "--in-sprites", description: "Input image file (bmp, png)", parseArgument: OptionsUtils.CreateExistingFileTestParseArgument) { IsRequired = true };
+	var inputSpritesOption = new Option<FileInfo?>(name: "--in-sprites", description: "Input image file (bmp, png)", parseArgument: OptionsUtils.CreateExistingFileTestParseArgument) { IsRequired = true };
+	var inputPaletteOption = new Option<FileInfo?>(name: "--in-palette", description: "Input palette (pal, optional, format is 3-RGB bytes per colour)");
 	var spritesOptions = new Option<FileInfo?>(name: "--out-sprites", description: "Output raw sprites file (optional)");
 	var paletteOption = new Option<FileInfo?>(name: "--out-palette", description: "Output palette file (optional)");
 	var is4BitOption = new Option<bool>(name: "--4bit", description: "Generate 4-bit sprites", getDefaultValue: () => false);
 
 	var result = new Command("sprites", "Converts sprites source image into next hardware format")
 	{
-		inputOption,
+		inputSpritesOption,
+		inputPaletteOption,
 		spritesOptions,
 		paletteOption,
 		is4BitOption,
 	};
 
-	result.SetHandler((input, sprites, palette, is4Bit, globalOptions) =>
+	result.SetHandler((inSprites, inPalette, sprites, palette, is4Bit, globalOptions) =>
 	{
 		Run(() => new SpriteRunner
 		{
 			Globals = globalOptions,
-			InputStreamProvider = FileInfoStreamProvider.Create(input),
+			InputStreamProvider = FileInfoStreamProvider.Create(inSprites),
 			OutputSpritesStreamProvider = FileInfoStreamProvider.Create(sprites),
 			OutputPaletteStreamProvider = FileInfoStreamProvider.Create(palette),
 			IsSprite4Bit = is4Bit,
 		});
 	},
-	inputOption,
+	inputSpritesOption,
+	inputPaletteOption,
 	spritesOptions,
 	paletteOption,
 	is4BitOption,
@@ -47,28 +50,32 @@ Command CreateSpritesCommand()
 
 Command CreateTilesCommand()
 {
-	var inputOption = new Option<FileInfo?>(name: "--in-tiles", description: "Input image (bmp, png)", parseArgument: OptionsUtils.CreateExistingFileTestParseArgument) { IsRequired = true };
+	var inputTilesOption = new Option<FileInfo?>(name: "--in-tiles", description: "Input image (bmp, png)", parseArgument: OptionsUtils.CreateExistingFileTestParseArgument) { IsRequired = true };
+	var inputPaletteOption = new Option<FileInfo?>(name: "--in-palette", description: "Input palette (pal, optional, format is 3-RGB bytes per colour)");
 	var tilesOption = new Option<FileInfo?>(name: "--out-tiles", description: "Output raw tiles file (optional)");
 	var paletteOption = new Option<FileInfo?>(name: "--out-palette", description: "Output palette file (optional)");
 
 	var result = new Command("tiles", "Converts tile definitions source image into Next hardware format")
 	{
-		inputOption,
+		inputTilesOption,
+		inputPaletteOption,
 		tilesOption,
 		paletteOption,
 	};
 
-	result.SetHandler((input, sprites, palette, globalOptions) =>
+	result.SetHandler((inTiles, inPalette, sprites, palette, globalOptions) =>
 	{
 		Run(() => new TilesRunner
 		{
 			Globals = globalOptions,
-			InputStreamProvider = FileInfoStreamProvider.Create(input),
+			InputStreamProvider = FileInfoStreamProvider.Create(inTiles),
+			InputPaletteStreamProvider = FileInfoStreamProvider.Create(inPalette),
 			OutputTilesStreamProvider = FileInfoStreamProvider.Create(sprites),
 			OutputPaletteStreamProvider = FileInfoStreamProvider.Create(palette),
 		});
 	},
-	inputOption,
+	inputTilesOption,
+	inputPaletteOption,
 	tilesOption,
 	paletteOption,
 	new GlobalOptionsBinder());

@@ -12,6 +12,7 @@ public class TilesRunner : BaseRunner
 	public const int TileHeight = 8;
 
 	public IStreamProvider? InputStreamProvider { get; set; }
+	public IStreamProvider? InputPaletteStreamProvider { get; set; }
 	public IStreamProvider? OutputTilesStreamProvider { get; set; }
 	public IStreamProvider? OutputPaletteStreamProvider { get; set; }
 
@@ -24,6 +25,7 @@ public class TilesRunner : BaseRunner
 		Log.NewLine();
 		Log.Verbose("Will parse:");
 		Log.Verbose($"{InputStreamProvider}");
+		if (InputPaletteStreamProvider != null) Log.Verbose($"{InputPaletteStreamProvider}");
 
 		Log.NewLine();
 		Log.Verbose("Will generate:");
@@ -51,7 +53,7 @@ public class TilesRunner : BaseRunner
 	protected override void OnRun()
 	{
 		var images = SplitImage();
-		var data = MapImages(images);
+		var data = MapColours(images);
 
 		if (OutputTilesStreamProvider != null)
 		{
@@ -87,11 +89,12 @@ public class TilesRunner : BaseRunner
 		.Images(InputStreamProvider!)
 	);
 
-	private IndexedData MapImages(List<ImageData> images) => RunTask(
+	private IndexedData MapColours(List<ImageData> images) => RunTask(
 		onStartMessage: "Mapping colours",
 		onEndMessage: (data) => $"{data.Colours.Count} colours mapped",
 		task: () => new PaletteMapper
 		{
+			InputPaletteStreamProvider = InputPaletteStreamProvider,
 			TransparentColour = Globals.TransparentColour,
 			Is4BitPalette = true
 		}
@@ -99,7 +102,7 @@ public class TilesRunner : BaseRunner
 	);
 
 	private void CreateTilesFile(IndexedData data) => RunTask(
-		onStartMessage: "Exporting sprites",
+		onStartMessage: "Exporting tiles",
 		onEndMessage: () => $"Exported {OutputTilesStreamProvider}",
 		task: () => new ImageExporter
 		{

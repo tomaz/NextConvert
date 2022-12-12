@@ -1,7 +1,6 @@
 ﻿using NextConvert.Sources.Data;
 using NextConvert.Sources.Helpers;
 
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace NextConvert.Sources.Utils;
@@ -11,6 +10,7 @@ namespace NextConvert.Sources.Utils;
 /// </summary>
 public class PaletteMapper
 {
+	public IStreamProvider? InputPaletteStreamProvider { get; set; }
 	public Argb32 TransparentColour { get; set; }
 	public bool Is4BitPalette { get; set; }
 
@@ -18,12 +18,234 @@ public class PaletteMapper
 
 	public IndexedData Map(IEnumerable<ImageData> images)
 	{
-		return Is4BitPalette ? Colours4Bit(images) : Colours8Bit(images);
+		// Note: custom palette support is currently preliminary, don't have enough data, just what I use for my projects, therefore it's not covered with unit tests.
+		return InputPaletteStreamProvider switch
+		{
+			null => Is4BitPalette ? Colours4Bit(images) : Colours8Bit(images),
+			_ => Is4BitPalette ? ColoursCustom4Bit(images) : ColoursCustom8Bit(images),
+		};
 	}
 
 	#endregion
 
 	#region Parsing
+
+	private IndexedData ColoursCustom8Bit(IEnumerable<ImageData> images)
+	{
+		Log.Verbose("Mapping with custom palette");
+
+		var result = new IndexedData();
+		var isTransparentSet = false;
+
+		// Read all colours from the provided palette file.
+		using (var reader = new BinaryReader(InputPaletteStreamProvider!.GetStream(FileMode.Open)))
+		{
+			while (reader.BaseStream.Position < reader.BaseStream.Length)
+			{
+				// Each colour uses 3 bytes representing RGB components.
+				var r = reader.ReadByte();
+				var g = reader.ReadByte();
+				var b = reader.ReadByte();
+
+				var argb = new Argb32(r: r, g: g, b: b);
+
+				var colour = new IndexedData.Colour(
+					argb: argb,
+					isTransparent: !isTransparentSet && argb == TransparentColour);
+
+				// Add the colour. Note we don't care if colour is repeated.
+				result.Colours.Add(colour);
+
+				// There can only be 1 transparent colour.
+				if (colour.IsTransparent) isTransparentSet = true;
+			}
+		}
+
+		Log.Verbose($"Detected {result.Colours.Count} total colours");
+
+		// Map all pixels.
+		foreach (var image in images)
+		{
+			var indexedImage = new IndexedData.Image(image);
+
+			result.Images.Add(indexedImage);
+
+			image.Image.ProcessPixelRows(accessor =>
+			{
+				for (int y = 0; y < accessor.Height; y++)
+				{
+					var row = accessor.GetRowSpan(y);
+
+					for (int x = 0; x < row.Length; x++)
+					{
+						// For now, just find the first matching colour.
+						var colour = new IndexedData.Colour(row[x]);
+						var colourIndex = (byte)result.Colours.FindMatching(colour);
+						indexedImage[x, y] = colourIndex;
+					}
+				}
+			});
+		}
+
+		return result;
+	}
+
+	private IndexedData ColoursCustom4Bit(IEnumerable<ImageData> images)
+	{
+		// Similar to mapped 4-bit palette, this is also more complex operation composed of several steps.
+
+		List<int> MapImageColoursToBanks(IndexedData.Image image)
+		{
+			var result = new List<int>();
+
+			for (var y = 0; y < image.Height; y++)
+			{
+				for (var x = 0; x < image.Width; x++)
+				{
+					var colourIndex = image[x, y];
+					var bank = colourIndex / IndexedBankData.MaxColours;
+
+					if (!result.Contains(bank))
+					{
+						result.Add(bank);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		IndexedData.Image? RemapColoursToBank(IndexedData data, IndexedData.Image image, int testBank)
+		{
+			// Prepare bank start index within the global palette.
+			var bankStartIndex = testBank * IndexedBankData.MaxColours;
+
+			// Prepare image copy that will hold remapped colours.
+			var copy = new IndexedData.Image(image);
+			var mapping = new Dictionary<byte, byte>();
+
+			// Test all pixels and build up remapping.
+			for (int y = 0; y < copy.Height; y++)
+			{
+				for (int x = 0; x < copy.Width; x++)
+				{
+					var imageColourIndex = copy[x, y];
+					var foundMatch = false;
+
+					if (!mapping.ContainsKey(imageColourIndex))
+					{
+						// If this is the first time we encounter given colour, see if we can find a match in given palette bank.
+						for (int i = 0; i < IndexedBankData.MaxColours; i++)
+						{
+							// Prepare global colour index and bail out in case we don't have all bank colours (only applicable for the last bank).
+							var index = i + bankStartIndex;
+							if (index >= data.Colours.Count) break;
+
+							// Prepare both colours.
+							var imageColour = data.Colours[imageColourIndex];
+							var bankColour = data.Colours[index];
+
+							// If both colours are transparent, we take them as a match even though the colour itself may be different.
+							if ((imageColour.IsTransparent && bankColour.IsTransparent) || imageColour.IsSameColour(bankColour))
+							{
+								mapping[imageColourIndex] = (byte)index;
+								copy[x, y] = (byte)index;
+								foundMatch = true;
+								break;
+							}
+						}
+					}
+					else
+					{
+						// If we already hapen the colour mapped, just reuse the same value.
+						copy[x, y] = mapping[imageColourIndex];
+						foundMatch = true;
+					}
+
+					// If we couldn't find any match, exit.
+					if (!foundMatch) return null;
+				}
+			}
+
+			// Arriving here means we can all colours of the image within the given bank.
+			return copy;
+		}
+
+		// First step is to mark all transparent colours. On 4-bit palette, each 16-colour bank has one colour transparent and it needs to be the same bank index as in all other banks. However there is complication that source palette doesn't use the same ARGB colour for transparent. Therefore we determine the index of the colour within the bank that should be transparent from the indicated transparent colour and then set the same colour transparent in all banks. At the same time we also compare and warn if newly marked transparent colour is different. That doesn't affect the outcome - Next hardware will still render it transparent, it's just visual as it can very easily be mistaken and used as opaque colour in image editor.
+		void MapTransparentColoursForAllBanks(IndexedData data)
+		{
+			// For 4-bit palette, each 16-colour bank needs to have the transparent colour set. We do it by finding the detected transparent colour index within its bank and set the same index for each bank.
+			var globalTransparentIndex = data.Colours.FindIndex(colour => colour.IsTransparent);
+			Log.Verbose($"Found transparent colour on index {globalTransparentIndex}");
+
+			var transparentColour = data.Colours[globalTransparentIndex];
+			var bankTransparentIndex = globalTransparentIndex % IndexedBankData.MaxColours;
+			for (int i = 0; i < data.Colours.Count; i += IndexedBankData.MaxColours)
+			{
+				var colour = data.Colours[i];
+
+				if (!colour.IsTransparent)
+				{
+					colour.IsTransparent = true;
+					Log.Verbose($"Making colour {i} transparent");
+
+					// Warn in case transparent colour doesn't match; the results will be the same in runtime, but it's better to have source image look closer to what it should be during runtime to avoid potentially hard to debug issues.
+					if (!transparentColour.IsSameColour(colour))
+					{
+						Log.Warning($"Colour {i} will be transparent but doesn't match (expected {transparentColour.AsArgb32}, actual {colour.AsArgb32})");
+					}
+				}
+			}
+		}
+
+		// Second step is to go through all images and determine number of banks they use. If more than 1, we attempt to find better bank that can fully fit the image. If that's not possible, we'll bail out with error.
+		void MapImagesToBanks(IndexedData data)
+		{
+			// For each image we prepare the list of banks it uses.
+			for (var i = 0; i < data.Images.Count; i++)
+			{
+				var image = data.Images[i];
+
+				// Get the list of all banks this image occupies. If all pixels are present within the same bank, we're done, we just need to adjust colours for the matched bank.
+				var banks = MapImageColoursToBanks(image);
+				if (banks.Count == 1)
+				{
+					image.AdjustColoursFor4BitPaletteBank(banks[0]);
+					continue;
+				}
+
+				var foundMatch = false;
+
+				// Otherwise we need to try to remap if possible.
+				Log.Verbose($"Image {image} has pixels from {banks.Count} banks, attempting to remap");
+				foreach (var bank in banks)
+				{
+					// Attempt to remap to given bank. If successful, this will return a copy of the image.
+					var remappedImage = RemapColoursToBank(data, image, bank);
+					if (remappedImage == null) continue;
+
+					// If we could remap, replace original with the copy and adjust colours for the new bank.
+					Log.Verbose($"Remapped colours to bank {bank}");
+					data.Images.Insert(i, remappedImage);
+					data.Images.RemoveAt(i + 1);
+
+					remappedImage.AdjustColoursFor4BitPaletteBank(bank);
+
+					foundMatch = true;
+
+					break;
+				}
+
+				if (!foundMatch) throw new InvalidDataException($"Can't remap image {image} to fit 4-bit palette");
+			}
+		}
+
+		// Initially we perform the usual 8-bit parsing.
+		var result = ColoursCustom8Bit(images);
+		MapTransparentColoursForAllBanks(result);
+		MapImagesToBanks(result);
+		return result;
+	}
 
 	private IndexedData Colours8Bit(IEnumerable<ImageData> images)
 	{
@@ -46,7 +268,12 @@ public class PaletteMapper
 					for (int x = 0; x < row.Length; x++)
 					{
 						ref Argb32 colour = ref row[x];
-						var colourIndex = (byte)result.Colours.AddIfDistinct(colour, colour == TransparentColour);
+
+						var colourIndex = (byte)result.Colours.AddIfDistinct(
+							colour: colour, 
+							isTransparent: colour == TransparentColour
+						);
+
 						indexedImage[x, y] = colourIndex;
 					}
 				}

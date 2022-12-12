@@ -62,6 +62,7 @@ public class TilemapOptionsBinder : BinderBase<TilemapOptionsBinder.TilemapOptio
     {
         public IStreamProvider? InputTilemapStreamProvider { get; set; }
         public IStreamProvider? InputTilesStreamProvider { get; set; }
+		public IStreamProvider? InputPaletteStreamProvider { get; set; }
 
         public IStreamProvider? OutputTilemapStreamProvider { get; set; }
         public IStreamProvider? OutputTilesStreamProvider { get; set; }

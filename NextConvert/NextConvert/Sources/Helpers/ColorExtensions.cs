@@ -30,7 +30,7 @@ public static class ColorExtensions
 	/// <summary>
 	/// Converts the given string to color.
 	/// </summary>
-	public static Color? ToColor(this string raw)
+	public static Argb32? ToColor(this string raw)
 	{
 		if (raw.StartsWith("#"))
 		{

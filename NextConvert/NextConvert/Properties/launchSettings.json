@@ -2,7 +2,7 @@
   "profiles": {
     "NextConvert": {
       "commandName": "Project",
-      "commandLineArgs": "--out-sheet c:\\Users\\tkrag\\Downloads\\export\\gba\\sheet.bmp\r\n--sheet-background #011E2B\r\n--sheet-image-columns 10\r\n--sheet-palette-columns 16\r\n--sheet-scale 2\r\n--ignore-copies\r\n--export-palette-count\r\n--keep-transparent boxed\r\n--transparent 255,0,255\r\n--9bit-palette\r\ntilemap\r\n--in-tilemap \"c:\\Users\\tkrag\\Downloads\\export\\gba\\level-001.level-001.layer-Layer 1.map001.map\"\r\n--out-tilemap c:\\Users\\tkrag\\Downloads\\export\\gba\\level001.map\r\n--in-tiles c:\\Users\\tkrag\\Downloads\\export\\gba\\level-001.tiles.bmp\r\n--out-tiles c:\\Users\\tkrag\\Downloads\\export\\gba\\tiles.spr\r\n--out-palette c:\\Users\\tkrag\\Downloads\\export\\gba\\tiles.pal\r\n--optimized\r\n"
+      "commandLineArgs": "--sheet-background #011E2B\r\n--sheet-image-columns 10\r\n--sheet-palette-columns 16\r\n--sheet-scale 2\r\n--export-palette-count\r\n--keep-transparent all\r\n--transparent #FF00FF\r\n--9bit-palette\r\nsprites\r\n--in-sprites \"c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.bmp\"\r\n--out-sprites c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.spr\r\n--out-palette c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game.pal\r\n--out-sheet c:\\Users\\tkrag\\Downloads\\export\\descend\\tiles-game-sheet.bmp\r\n"
     }
   }
 }

@@ -21,6 +21,7 @@ public class TilemapRunner : BaseRunner
 		Log.Verbose("Will parse:");
 		if (Options?.InputTilesStreamProvider != null) Log.Verbose($"{Options?.InputTilesStreamProvider}");
 		if (Options?.InputTilemapStreamProvider != null) Log.Verbose($"{Options?.InputTilemapStreamProvider}");
+		if (Options?.InputPaletteStreamProvider != null) Log.Verbose($"{Options?.InputPaletteStreamProvider}");
 
 		Log.NewLine();
 		Log.Verbose("Will generate:");
@@ -140,6 +141,7 @@ public class TilemapRunner : BaseRunner
 		onEndMessage: (data) => $"{data.Colours.Count} colours mapped",
 		task: () => new PaletteMapper
 		{
+			InputPaletteStreamProvider = Options?.InputPaletteStreamProvider,
 			TransparentColour = Globals.TransparentColour,
 			Is4BitPalette = true
 		}

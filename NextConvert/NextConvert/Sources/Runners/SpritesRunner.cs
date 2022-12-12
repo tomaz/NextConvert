@@ -12,6 +12,7 @@ public class SpriteRunner : BaseRunner
 	private const int SpriteHeight = 16;
 
 	public IStreamProvider? InputStreamProvider { get; set; }
+	public IStreamProvider? InputPaletteStreamProvider { get; set; }
 	public IStreamProvider? OutputSpritesStreamProvider { get; set; }
 	public IStreamProvider? OutputPaletteStreamProvider { get; set; }
 
@@ -26,7 +27,8 @@ public class SpriteRunner : BaseRunner
 		Log.NewLine();
 		Log.Verbose("Will parse:");
 		Log.Verbose($"{InputStreamProvider}");
-		
+		if (InputPaletteStreamProvider != null) Log.Verbose($"{InputPaletteStreamProvider}");
+
 		Log.NewLine();
 		Log.Verbose("Will generate:");
 		if (OutputSpritesStreamProvider != null) Log.Verbose($"{OutputSpritesStreamProvider}");
@@ -95,6 +97,7 @@ public class SpriteRunner : BaseRunner
 		onEndMessage: (data) => $"{data.Colours.Count} colours mapped",
 		task: () => new PaletteMapper
 		{
+			InputPaletteStreamProvider = InputPaletteStreamProvider,
 			TransparentColour = Globals.TransparentColour,
 			Is4BitPalette = IsSprite4Bit
 		}
